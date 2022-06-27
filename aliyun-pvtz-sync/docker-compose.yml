@@ -1,0 +1,12 @@
+version: "3.8"
+
+services:
+  aliyun-pvtz-sync:
+    container_name: aliyun-pvtz-sync
+    image: pm9551/aliyun-pvtz-sync:latest
+    env_file: .env
+    restart: unless-stopped
+
+networks:
+  default:
+    name: aliyun-pvtz-sync

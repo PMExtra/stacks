@@ -1,0 +1,20 @@
+version: "3.8"
+
+services:
+  acme.sh:
+    container_name: acme.sh
+    image: neilpang/acme.sh:${TAG:-latest}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - data:/acme.sh
+    env_file: .env
+    network_mode: bridge
+    command: daemon
+    restart: unless-stopped
+
+volumes:
+  data:
+
+networks:
+  default:
+    name: acme

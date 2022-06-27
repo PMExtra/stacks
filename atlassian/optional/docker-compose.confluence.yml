@@ -1,0 +1,22 @@
+services:
+  confluence:
+    container_name: atlassian_confluence
+    image: atlassian/confluence-server:${CONFLUENCE_TAG:-latest}
+    volumes:
+      - confluence_data:/var/atlassian/application-data/confluence
+      - /etc/localtime:/etc/localtime:ro
+      - /opt/atlassian/confluence/confluence/WEB-INF/lib/atlassian-extras-key-manager-3.4.6.jar:/opt/atlassian/confluence/confluence/WEB-INF/lib/atlassian-extras-key-manager-3.4.6.jar:ro
+    environment:
+      JVM_MINIMUM_MEMORY: ${CONFLUENCE_JVM_MINIMUM_MEMORY:-512m}
+      JVM_MAXIMUM_MEMORY: ${CONFLUENCE_JVM_MAXIMUM_MEMORY:-2048m}
+      ATL_TOMCAT_SECURE: "${CONFLUENCE_SECURE:-true}"
+      ATL_TOMCAT_SCHEME: ${CONFLUENCE_SCHEME:-https}
+      ATL_PROXY_NAME: ${CONFLUENCE_DOMAIN}
+      ATL_PROXY_PORT: ${CONFLUENCE_PORTS:-443}
+    hostname: confluence
+    restart: unless-stopped
+    depends_on:
+      - postgres
+
+volumes:
+  confluence_data:

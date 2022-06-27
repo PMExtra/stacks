@@ -1,0 +1,4 @@
+volumes:
+  data:
+    name: ${VOLUME_NAME:-acme_data}
+    external: true

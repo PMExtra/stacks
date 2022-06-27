@@ -1,0 +1,7 @@
+.env
+docker-compose.*.yml
+!*/optional/docker-compose.*.yml
+before-upgrade.*.sh
+!*/optional/before-upgrade.*.sh
+after-upgrade.*.sh
+!*/optional/after-upgrade.*.sh

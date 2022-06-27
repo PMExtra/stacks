@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+  postgres:
+    container_name: authelia_postgres
+    image: postgres:${POSTGRES_TAG:-13}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    hostname: postgres
+    restart: unless-stopped
+
+  redis:
+    container_name: authelia_redis
+    image: redis:${REDIS_TAG:-6}
+    volumes:
+      - redis_data:/data
+    hostname: redis
+    restart: unless-stopped
+
+  authelia:
+    container_name: authelia
+    image: authelia/authelia:${TAG:-latest}
+    volumes:
+      - config:/config
+    hostname: authelia
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  config:
+
+networks:
+  default:
+    name: authelia

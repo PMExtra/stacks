@@ -1,0 +1,11 @@
+version: "3.8"
+
+services:
+  xray:
+    container_name: xray
+    image: teddysun/xray:${TAG:-latest}
+    volumes:
+      - conf:/etc/xray
+
+volumes:
+  conf:

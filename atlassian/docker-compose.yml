@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  postgres:
+    container_name: atlassian_postgres
+    image: postgres:${POSTGRES_TAG:-11}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    hostname: postgres
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  default:
+    name: atlassian

@@ -1,0 +1,22 @@
+version: "3.8"
+
+services:
+  master:
+    container_name: salt
+    image: saltstack/salt:${TAG:-latest}
+    ports:
+      - "4505:4505"
+      - "4506:4506"
+    volumes:
+      - etc:/etc/salt
+      - srv:/srv/salt
+    hostname: salt
+    restart: unless-stopped
+
+volumes:
+  etc:
+  srv:
+
+networks:
+  default:
+    name: salt

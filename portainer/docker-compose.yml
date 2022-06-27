@@ -1,0 +1,29 @@
+version: "3.8"
+
+services:
+  agent:
+    container_name: portainer_agent
+    image: portainer/agent:${AGENT_TAG:-latest}
+    volumes:
+      - ${DOCKER_DATA_PATH:-/var/lib/docker}/volumes:/var/lib/docker/volumes
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+
+  portainer:
+    container_name: portainer
+    image: portainer/portainer-ce:${TAG:-latest}
+    command: -H tcp://agent:9001 --tlsskipverify
+    ports:
+      - "8000:8000"
+    volumes:
+      - data:/data
+    restart: unless-stopped
+    depends_on:
+      - agent
+
+volumes:
+  data:
+
+networks:
+  default:
+    name: portainer

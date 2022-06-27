@@ -1,0 +1,22 @@
+version: "3.8"
+
+services:
+  nginx:
+    container_name: nginx
+    image: nginx:${TAG:-latest}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - etc:/etc/nginx
+      - www:/var/www
+    hostname: nginx
+    restart: unless-stopped
+
+volumes:
+  etc:
+  www:
+
+networks:
+  default:
+    name: nginx

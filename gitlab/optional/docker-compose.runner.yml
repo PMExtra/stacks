@@ -1,0 +1,14 @@
+services:
+  runner:
+    container_name: gitlab_runner
+    image: gitlab/gitlab-runner:${RUNNER_TAG:-latest}
+    volumes:
+      - runner_home:/home/gitlab-runner
+      - runner_config:/etc/gitlab-runner
+      - /var/run/docker.sock:/var/run/docker.sock
+    hostname: gitlab_runner
+    restart: unless-stopped
+
+volumes:
+  runner_home:
+  runner_config:

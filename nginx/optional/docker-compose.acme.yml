@@ -1,0 +1,9 @@
+services:
+  nginx:
+    volumes:
+      - acme:/etc/acme
+    labels:
+      - sh.acme.autoload.${ACME_DOMAIN}=true
+
+volumes:
+  acme:

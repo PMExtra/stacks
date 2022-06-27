@@ -1,0 +1,24 @@
+version: "3.8"
+
+services:
+  vault:
+    container_name: vault
+    image: vault:${TAG:-latest}
+    command: server
+    volumes:
+      - config:/vault/config
+      - file:/vault/file
+      - logs:/vault/logs
+    cap_add:
+      - IPC_LOCK
+    hostname: vault
+    restart: unless-stopped
+
+volumes:
+  config:
+  file:
+  logs:
+
+networks:
+  default:
+    name: vault

@@ -1,0 +1,8 @@
+dns-proxy-server
+================
+Notice:
+  You may need to stop and disable systemd-resolved
+  to release udp 53 port for dps:
+
+  systemctl stop systemd-resolved.service
+  systemctl disable systemd-resolved.service

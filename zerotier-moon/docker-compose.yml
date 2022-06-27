@@ -1,0 +1,19 @@
+version: "3.8"
+
+services:
+  zerotier-moon:
+    container_name: zerotier-moon
+    image: seedgou/zerotier-moon:${TAG:-latest}
+    ports:
+      - 9993:9993/udp
+    volumes:
+      - data:/var/lib/zerotier-one
+    command: -4 ${IPV4}
+    restart: unless-stopped
+
+volumes:
+  data:    
+
+networks:
+  default:
+    name: zerotier

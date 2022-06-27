@@ -1,0 +1,15 @@
+acme.sh
+=======
+Notice:
+  You may need to register an account of CA:
+
+  acme.sh \
+    --register-account \
+    -m '<email>'
+
+  or
+
+  acme.sh \
+    --register-account \
+    --eab-kid '<eab-kid>' \
+    --eab-hmac-key '<eab-hmac-key>'

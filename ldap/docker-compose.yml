@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  openldap:
+    container_name: openldap
+    image: osixia/openldap:${TAG:-latest}
+    ports:
+      - "389:389"
+      - "636:636"
+    volumes:
+      - config:/etc/ldap/slapd.d
+      - acme:/etc/acme
+      - data:/var/lib/ldap
+    environment:
+      - LDAP_ORGANISATION
+      - LDAP_DOMAIN
+      - LDAP_TLS_VERIFY_CLIENT=try
+      - KEEP_EXISTING_CONFIG=true
+    labels:
+      - sh.acme.autoload.${ACME_DOMAIN}=true
+    hostname: openldap
+    command: --copy-service
+    restart: unless-stopped
+
+volumes:
+  config:
+  acme:
+  data:
+
+networks:
+  default:
+    name: ldap

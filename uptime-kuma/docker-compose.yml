@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  uptime-kuma:
+    container_name: uptime-kuma
+    image: louislam/uptime-kuma:${TAG:-latest}
+    volumes:
+      - data:/app/data
+    hostname: uptime-kuma
+    restart: unless-stopped
+
+volumes:
+  data:
+
+networks:
+  default:
+    name: uptime-kuma

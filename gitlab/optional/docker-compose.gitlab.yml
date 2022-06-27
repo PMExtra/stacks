@@ -1,0 +1,15 @@
+services:
+  gitlab:
+    container_name: gitlab
+    image: ${IMAGE:-gitlab/gitlab-ce}:${TAG:-latest}
+    volumes:
+      - config:/etc/gitlab
+      - data:/var/opt/gitlab
+      - logs:/var/log/gitlab
+    hostname: gitlab
+    restart: unless-stopped
+
+volumes:
+  config:
+  data:
+  logs:

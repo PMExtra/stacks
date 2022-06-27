@@ -1,0 +1,120 @@
+#!/usr/bin/env bash
+
+VER=1.2.0
+PROJECT_NAME="upgrade"
+PROJECT_ENTRY="upgrade"
+
+_SCRIPT_="$0"
+_ROOT_=$(dirname "$_SCRIPT_")
+stack=""
+skip_pull=false
+no_up=false
+
+showhelp() {
+  version
+  echo "Usage: $PROJECT_ENTRY [options] <stack> [parameters ...]
+Options:
+  -h, --help      Show this help message.
+  -v, --version   Show version info.
+  -s, --skip-pull Don't check for image updates if there is a local image.
+  -n, --no-up     Execute custom command instead of up.
+
+Parameters:
+  The parameters will be passthrough to 'docker compose' command, for more info please ref 'docker compose help'.
+"
+}
+
+version() {
+  echo "$PROJECT_NAME"
+  echo "v$VER"
+}
+
+_docker_compose() {
+  # https://stackoverflow.com/a/23357277/6401252
+  _compose_files=(-f ./docker-compose.yml)
+  while IFS= read -r -d $'\0' -u 3; do
+    _compose_files+=(-f "$REPLY")
+  done 3< <(find . -maxdepth 1 -name 'docker-compose.*.yml' -xtype f -print0 | sort -z)
+  docker compose "${_compose_files[@]}" "$@"
+}
+
+_execute_hook() {
+  echo "> Found hook: $_hook, executing..."
+  # shellcheck source=/dev/null
+  . "$_hook" "$@"
+}
+
+_before_upgrade() {
+  _hook="./before-upgrade.sh"
+  if [ -f "$_hook" ]; then
+    _execute_hook "$@"
+  fi
+  while IFS= read -r -d $'\0' -u 3 _hook; do
+    _execute_hook "$@"
+  done 3< <(find . -maxdepth 1 -name 'before-upgrade.*.sh' -xtype f -print0 | sort -z)
+}
+
+_upgrade() {
+  _hook="./custom-upgrade.sh"
+  if [ -f "$_hook" ]; then
+    _execute_hook "$@"
+  else
+    if ! $skip_pull; then
+      echo "> Pulling images..."
+      _docker_compose pull
+    fi
+    echo "> Updating stack..."
+    if $no_up; then
+      _docker_compose "$@"
+    else
+      _docker_compose up "${@:--d}"
+    fi
+  fi
+}
+
+_after_upgrade() {
+  _hook="./after-upgrade.sh"
+  if [ -f "$_hook" ]; then
+    _execute_hook "$@"
+  fi
+  while IFS= read -r -d $'\0' -u 3 _hook; do
+    _execute_hook "$@"
+  done 3< <(find . -maxdepth 1 -name 'after-upgrade.*.sh' -xtype f -print0 | sort -z)
+}
+
+_process() {
+  while [ ${#} -gt 0 ]; do
+    case "${1}" in
+    --help | -h)
+      showhelp
+      return
+      ;;
+    --version | -v)
+      version
+      return
+      ;;
+    --skip-pull | -s)
+      skip_pull=true
+      ;;
+    --no-up | -n)
+      skip_pull=true
+      no_up=true
+      ;;
+    *)
+      stack="${1}"
+      shift 1
+      break
+      ;;
+    esac
+    shift 1
+  done
+
+  set -e;
+  cd "$stack"
+  _before_upgrade "$@"
+  _upgrade "$@"
+  _after_upgrade "$@"
+  set +e;
+}
+
+_process "$@"
