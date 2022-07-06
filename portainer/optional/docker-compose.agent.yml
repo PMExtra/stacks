@@ -1,0 +1,8 @@
+services:
+  agent:
+    container_name: portainer_agent
+    image: portainer/agent:${AGENT_TAG:-latest}
+    volumes:
+      - ${DOCKER_DATA_PATH:-/var/lib/docker}/volumes:/var/lib/docker/volumes
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped

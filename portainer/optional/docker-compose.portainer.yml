@@ -1,0 +1,12 @@
+services:
+  portainer:
+    container_name: portainer
+    image: ${IMAGE:-portainer/portainer-ce}:${TAG:-latest}
+    ports:
+      - "8000:8000"
+    volumes:
+      - data:/data
+    restart: unless-stopped
+
+volumes:
+  data:
