@@ -1,0 +1,7 @@
+services:
+  acme.sh:
+    volumes:
+      - ssh:/root/.ssh
+
+volumes:
+  ssh:
