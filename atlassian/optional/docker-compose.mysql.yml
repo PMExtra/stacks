@@ -1,0 +1,21 @@
+version: "3.8"
+
+services:
+  database:
+    container_name: atlassian_postgres
+    image: postgres:${MYSQL_TAG:-8}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root
+    secrets:
+      - mysql_root
+    hostname: postgres
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+
+secrets:
+  mysql_root:
+    file: ./secrets/mysql_root

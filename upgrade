@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VER=1.2.0
+VER=1.3.0
 PROJECT_NAME="upgrade"
 PROJECT_ENTRY="upgrade"
 
@@ -59,9 +59,21 @@ _upgrade() {
   if [ -f "$_hook" ]; then
     _execute_hook "$@"
   else
-    if ! $skip_pull; then
-      echo "> Pulling images..."
-      _docker_compose pull
+    if grep -q '^\s*build:' docker-compose.*yml; then
+      if ! $skip_pull; then
+        echo "> Pulling images (local images may failed to pull as expected)..."
+        _docker_compose pull --ignore-pull-failures
+        echo "> Building local images..."
+        _docker_compose build --pull
+      else
+        echo "> Building local images..."
+        _docker_compose build
+      fi
+    else
+      if ! $skip_pull; then
+        echo "> Pulling images..."
+        _docker_compose pull
+      fi
     fi
     echo "> Updating stack..."
     if $no_up; then

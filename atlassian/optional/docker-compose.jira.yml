@@ -6,16 +6,17 @@ services:
       - jira_data:/var/atlassian/application-data/jira
       - /etc/localtime:/etc/localtime:ro
     environment:
+      TZ: ${TIMEZONE:-Asia/Shanghai}
       JVM_MINIMUM_MEMORY: ${JIRA_JVM_MINIMUM_MEMORY:-512m}
       JVM_MAXIMUM_MEMORY: ${JIRA_JVM_MAXIMUM_MEMORY:-1024m}
-      ATL_TOMCAT_SECURE: "${JIRA_SECURE:-true}"
+      ATL_TOMCAT_SECURE: ${JIRA_SECURE:-true}
       ATL_TOMCAT_SCHEME: ${JIRA_SCHEME:-https}
       ATL_PROXY_NAME: ${JIRA_DOMAIN}
-      ATL_PROXY_PORT: ${JIRA_PORTS:-443}
+      ATL_PROXY_PORT: ${JIRA_PORT:-443}
     hostname: jira
     restart: unless-stopped
     depends_on:
-      - postgres
+      - database
 
 volumes:
   jira_data:

@@ -1,0 +1,21 @@
+version: "3.8"
+
+services:
+  database:
+    container_name: atlassian_postgres
+    image: postgres:${POSTGRES_TAG:-11}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_passwd
+    secrets:
+      - postgres_passwd
+    hostname: postgres
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+secrets:
+  postgres_passwd:
+    file: ./secrets/postgres_passwd

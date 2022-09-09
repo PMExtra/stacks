@@ -5,18 +5,18 @@ services:
     volumes:
       - crowd_data:/var/atlassian/application-data/crowd
       - /etc/localtime:/etc/localtime:ro
-      - /opt/atlassian/crowd/crowd-webapp/WEB-INF/lib/atlassian-extras-key-manager-3.4.6.jar:/opt/atlassian/crowd/crowd-webapp/WEB-INF/lib/atlassian-extras-key-manager-3.4.6.jar
     environment:
+      TZ: ${TIMEZONE:-Asia/Shanghai}
       JVM_MINIMUM_MEMORY: ${CROWD_JVM_MINIMUM_MEMORY:-128m}
       JVM_MAXIMUM_MEMORY: ${CROWD_JVM_MAXIMUM_MEMORY:-512m}
-      ATL_TOMCAT_SECURE: "${CROWD_SECURE:-true}"
+      ATL_TOMCAT_SECURE: ${CROWD_SECURE:-true}
       ATL_TOMCAT_SCHEME: ${CROWD_SCHEME:-https}
       ATL_PROXY_NAME: ${CROWD_DOMAIN}
-      ATL_PROXY_PORT: ${CROWD_PORTS:-443}
+      ATL_PROXY_PORT: ${CROWD_PORT:-443}
     hostname: crowd
     restart: unless-stopped
     depends_on:
-      - postgres
+      - database
 
 volumes:
   crowd_data:

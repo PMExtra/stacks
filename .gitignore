@@ -5,3 +5,6 @@ before-upgrade.*.sh
 !*/optional/before-upgrade.*.sh
 after-upgrade.*.sh
 !*/optional/after-upgrade.*.sh
+mount/
+secrets/
+volumes/
