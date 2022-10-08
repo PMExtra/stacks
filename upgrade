@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VER=1.3.1
+VER=1.4.0
 PROJECT_NAME="upgrade"
 PROJECT_ENTRY="upgrade"
 
@@ -12,7 +12,9 @@ no_up=false
 
 showhelp() {
   version
-  echo "Usage: $PROJECT_ENTRY [options] <stack> [parameters ...]
+  echo "
+Usage: $PROJECT_ENTRY [OPTIONS]... STACK [PARAMETERS]...
+
 Options:
   -h, --help      Show this help message.
   -v, --version   Show version info.
@@ -20,7 +22,7 @@ Options:
   -n, --no-up     Execute custom command instead of up.
 
 Parameters:
-  The parameters will be passthrough to 'docker compose' command, for more info please ref 'docker compose help'.
+  The parameters will be passed to 'docker compose' command, for more info please ref 'docker compose help'.
 "
 }
 
@@ -134,18 +136,18 @@ _upgrade() {
   fi
 }
 
-# Main entrypoint
-_process() {
-  # Resolves the arguments
+# To parse the arguments
+# Usage: _parse_arguments [ARGUMENTS...]
+_parse_arguments() {
   while [ ${#} -gt 0 ]; do
     case "${1}" in
     --help | -h)
       showhelp
-      return
+      exit 0
       ;;
     --version | -v)
       version
-      return
+      exit 0
       ;;
     --skip-pull | -s)
       skip_pull=true
@@ -156,19 +158,30 @@ _process() {
       no_up=true
       ;;
     *)
-      # Assume the first unknown argument is the stack name
+      # Assume the first unknown argument to be the stack name
       stack="${1}"
       shift 1
-
-      # Stop resolving the rest arguments, they will be passed to all hooks and docker compose command
+      # Stop parsing the rest arguments, they will be passed to all hooks and docker compose command
       break
       ;;
     esac
+    # Continue to parse the next argument
     shift 1
   done
 
+  if [ -z "$stack" ]; then
+    # If no stack name has been specified
+    showhelp
+    exit 1
+  fi
+}
+
+# Main entrypoint
+_process() {
   # Exit immediately if any error occurs (exits with a non-zero status)
   set -e;
+
+  _parse_arguments "$@"
 
   cd "$stack"
   _before_upgrade "$@"
