@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# This script is used to configure external database.
+# This hook is used to configure external database.
 # It will clear the local database dependencies if no local database is configured.
 
 # The file to configure external database
@@ -15,8 +15,8 @@ if [ -f docker-compose.mysql.yml ] || [ -f docker-compose.postgres.yml ]; then
   return
 fi
 
-# _remove_dependencies service
 # To append a configuration into EXTERNAL_DB_FILE to clear 'depends_on' field of specified service
+# Usage: _remove_dependencies SERVICE_NAME
 _remove_dependencies() {
   _service=$1
   if [ -f "docker-compose.$_service.yml" ]; then

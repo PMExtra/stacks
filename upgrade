@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VER=1.3.0
+VER=1.3.1
 PROJECT_NAME="upgrade"
 PROJECT_ENTRY="upgrade"
 
@@ -29,21 +29,32 @@ version() {
   echo "v$VER"
 }
 
+# A wrapper of 'docker compose' command that can auto discovery all docker-compose.*.yml file in work directory
+# Usage: _docker_compose [ARGUMENTS...]
 _docker_compose() {
-  # https://stackoverflow.com/a/23357277/6401252
+  # The main docker-compose.yml is required
   _compose_files=(-f ./docker-compose.yml)
+
+  # Discovery other docker-compose.*.yml file, sort by name
+  # https://stackoverflow.com/a/23357277/6401252
   while IFS= read -r -d $'\0' -u 3; do
     _compose_files+=(-f "$REPLY")
   done 3< <(find . -maxdepth 1 -name 'docker-compose.*.yml' -xtype f -print0 | sort -z)
+
+  # Pass arguments to the original command
   docker compose "${_compose_files[@]}" "$@"
 }
 
+# A wrapper to execute hook script with log
+# Usage: _execute_hook FILE
 _execute_hook() {
   echo "> Found hook: $_hook, executing..."
   # shellcheck source=/dev/null
   . "$_hook" "$@"
 }
 
+# To discovery and execute before-upgrade hook, the arguments will be passed to each hook
+# Usage: _before_upgrade [ARGUMENTS...]
 _before_upgrade() {
   _hook="./before-upgrade.sh"
   if [ -f "$_hook" ]; then
@@ -54,36 +65,8 @@ _before_upgrade() {
   done 3< <(find . -maxdepth 1 -name 'before-upgrade.*.sh' -xtype f -print0 | sort -z)
 }
 
-_upgrade() {
-  _hook="./custom-upgrade.sh"
-  if [ -f "$_hook" ]; then
-    _execute_hook "$@"
-  else
-    if grep -q '^\s*build:' docker-compose.*yml; then
-      if ! $skip_pull; then
-        echo "> Pulling images (local images may failed to pull as expected)..."
-        _docker_compose pull --ignore-pull-failures
-        echo "> Building local images..."
-        _docker_compose build --pull
-      else
-        echo "> Building local images..."
-        _docker_compose build
-      fi
-    else
-      if ! $skip_pull; then
-        echo "> Pulling images..."
-        _docker_compose pull
-      fi
-    fi
-    echo "> Updating stack..."
-    if $no_up; then
-      _docker_compose "$@"
-    else
-      _docker_compose up "${@:--d}"
-    fi
-  fi
-}
-
+# To discovery and execute after-upgrade hook, the arguments will be passed to each hook
+# Usage: _after_upgrade [ARGUMENTS...]
 _after_upgrade() {
   _hook="./after-upgrade.sh"
   if [ -f "$_hook" ]; then
@@ -94,7 +77,58 @@ _after_upgrade() {
   done 3< <(find . -maxdepth 1 -name 'after-upgrade.*.sh' -xtype f -print0 | sort -z)
 }
 
+# The inner upgrade implementation, the arguments will be passed to custom-upgrade hook or 'docker compose' command
+# Usage: _upgrade [ARGUMENTS...]
+_upgrade() {
+  _hook="./custom-upgrade.sh"
+  if [ -f "$_hook" ]; then
+    # Execute the custom-upgrade hook rather than the default implementation if a custom-upgrade hook is found
+    _execute_hook "$@"
+    return
+  fi
+
+  if grep -q '^\s*build:' docker-compose.*yml; then
+    # Build the images first if any images need to be built
+
+    if $skip_pull; then
+      # Build the local images directly if the user specifies '--skip-pull' option
+      echo "> Building local images..."
+      _docker_compose build
+    else
+      # User does not specify '--skip-pull' option
+
+      # Try to pull the images
+      echo "> Pulling images (local images may failed to pull as expected)..."
+      _docker_compose pull --ignore-pull-failures
+
+      # Build the local images with '--pull' option
+      echo "> Building local images..."
+      _docker_compose build --pull
+    fi
+  else
+    # No images need to be built
+
+    if ! $skip_pull; then
+      # Pull images except user specifies to '--skip-pull' option
+      echo "> Pulling images..."
+      _docker_compose pull
+    fi
+  fi
+
+  echo "> Updating stack..."
+  if $no_up; then
+    # Execute the custom action if the user specifies '--no-up' option
+    _docker_compose "$@"
+  else
+    # Execute 'up' action by default and pass the arguments to the 'docker compose up' command
+    # If no arguments is specified, it defaults to '-d'
+    _docker_compose up "${@:--d}"
+  fi
+}
+
+# Main entrypoint
 _process() {
+  # Resolves the arguments
   while [ ${#} -gt 0 ]; do
     case "${1}" in
     --help | -h)
@@ -109,23 +143,31 @@ _process() {
       skip_pull=true
       ;;
     --no-up | -n)
+      # no-up implicate skip-pull
       skip_pull=true
       no_up=true
       ;;
     *)
+      # Assume the first unknown argument is the stack name
       stack="${1}"
       shift 1
+
+      # Stop resolving the rest arguments, they will be passed to all hooks and docker compose command
       break
       ;;
     esac
     shift 1
   done
 
+  # Exit immediately if any error occurs (exits with a non-zero status)
   set -e;
+
   cd "$stack"
   _before_upgrade "$@"
   _upgrade "$@"
   _after_upgrade "$@"
+
+  # Reset the flag
   set +e;
 }
 
