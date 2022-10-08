@@ -77,16 +77,9 @@ _after_upgrade() {
   done 3< <(find . -maxdepth 1 -name 'after-upgrade.*.sh' -xtype f -print0 | sort -z)
 }
 
-# The inner upgrade implementation, the arguments will be passed to custom-upgrade hook or 'docker compose' command
-# Usage: _upgrade [ARGUMENTS...]
-_upgrade() {
-  _hook="./custom-upgrade.sh"
-  if [ -f "$_hook" ]; then
-    # Execute the custom-upgrade hook rather than the default implementation if a custom-upgrade hook is found
-    _execute_hook "$@"
-    return
-  fi
-
+# Try to build local images if necessary
+# Usage: _try_build
+_try_build() {
   if grep -q '^\s*build:' docker-compose.*yml; then
     # Build the images first if any images need to be built
 
@@ -114,14 +107,29 @@ _upgrade() {
       _docker_compose pull
     fi
   fi
+}
+
+# The inner upgrade implementation, the arguments will be passed to custom-upgrade hook or 'docker compose' command
+# Usage: _upgrade [ARGUMENTS...]
+_upgrade() {
+  _hook="./custom-upgrade.sh"
+  if [ -f "$_hook" ]; then
+    # Execute the custom-upgrade hook rather than the default implementation if a custom-upgrade hook is found
+    _execute_hook "$@"
+    return
+  fi
 
   echo "> Updating stack..."
   if $no_up; then
     # Execute the custom action if the user specifies '--no-up' option
     _docker_compose "$@"
   else
-    # Execute 'up' action by default and pass the arguments to the 'docker compose up' command
-    # If no arguments is specified, it defaults to '-d'
+    # Execute 'up' action by default except '--no-up' option was specified
+
+    # Before up the stack, try to build local images if necessary
+    _try_build
+
+    # Pass the arguments to the 'docker compose up' command. If no arguments is specified, it defaults to '-d'
     _docker_compose up "${@:--d}"
   fi
 }
