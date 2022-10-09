@@ -9,8 +9,10 @@ RUN set -ex; \
   fi; \
   apt-get update; \
   apt-get install -y --no-install-recommends language-selector-common; \
+  # All language support
   apt install -y --no-install-recommends $(check-language-support -a | tr ' ' '\n' | grep '^fonts-'); \
-  fc-cache -f -v; \
+  # Enhanced Chinese support
+  apt install -y --no-install-recommends 'fonts-arphic-*' 'fonts-cns11643-*'; \
   apt purge -y language-selector-common; \
   rm -rf /var/lib/apt/lists/*; \
   if [ -f /etc/apt/sources.list.bak ]; then \
