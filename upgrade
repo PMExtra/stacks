@@ -8,7 +8,9 @@ _SCRIPT_="$0"
 _ROOT_=$(dirname "$_SCRIPT_")
 stack=""
 skip_pull=false
+no_build=false
 no_up=false
+debug=false
 hook_args=()
 docker_args=()
 
@@ -91,6 +93,11 @@ _after_upgrade() {
 # Try to build local images if necessary
 # Usage: _try_build
 _try_build() {
+  if $no_build; then
+    # Skip build if user specifies to '--no-build' option
+    return
+  fi
+
   if grep -q '^\s*build:' docker-compose.*yml; then
     # Build the images first if any images need to be built
 
@@ -158,6 +165,9 @@ _parse_arguments() {
       version
       exit 0
       ;;
+    --debug | -d)
+      debug=true
+      ;;
     --skip-pull | -s)
       skip_pull=true
       ;;
@@ -165,6 +175,9 @@ _parse_arguments() {
       # no-up implicate skip-pull
       skip_pull=true
       no_up=true
+      ;;
+    --no-build)
+      no_build=true
       ;;
     --hook-args | -a)
       hook_args+=("$1")
@@ -193,8 +206,16 @@ _parse_arguments() {
 
 # Main entrypoint
 _process() {
+  # Backup shopt
+  shopt_bak="$(shopt -po xtrace errexit)"
+
   # Exit immediately if any error occurs (exits with a non-zero status)
   set -e;
+
+  if $debug; then
+    # Trace executed commands if the user specifies '--debug' option
+    set -x;
+  fi
 
   _parse_arguments "$@"
 
@@ -204,7 +225,7 @@ _process() {
   _after_upgrade
 
   # Reset the flag
-  set +e;
+  eval "$shopt_bak"
 }
 
 _process "$@"
