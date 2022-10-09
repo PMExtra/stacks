@@ -1,0 +1,4 @@
+services:
+  confluence:
+    volumes:
+      - ./mount/customfonts:/usr/share/fonts/customfonts:ro

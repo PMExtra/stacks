@@ -1,13 +1,7 @@
 services:
   confluence:
     container_name: atlassian_confluence
-    image: confluence-server:${CONFLUENCE_TAG:-latest}-multi-language-support
-    build:
-      context: optional/confluence
-      dockerfile: multi-language-support.Dockerfile
-      args:
-        - UBUNTU_MIRROR
-        - IMAGE=atlassian/confluence-server:${CONFLUENCE_TAG:-latest}
+    image: atlassian/confluence:${CONFLUENCE_TAG:-latest}
     volumes:
       - confluence_data:/var/atlassian/application-data/confluence
       - /etc/localtime:/etc/localtime:ro
