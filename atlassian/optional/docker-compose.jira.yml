@@ -15,8 +15,6 @@ services:
       ATL_PROXY_PORT: ${JIRA_PORT:-443}
     hostname: jira
     restart: unless-stopped
-    depends_on:
-      - database
 
 volumes:
   jira_data:

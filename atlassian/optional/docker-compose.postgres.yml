@@ -1,7 +1,7 @@
 version: "3.8"
 
 services:
-  database:
+  postgres:
     container_name: atlassian_postgres
     image: postgres:${POSTGRES_TAG:-11}
     volumes:

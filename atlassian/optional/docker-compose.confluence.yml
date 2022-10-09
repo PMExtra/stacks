@@ -15,8 +15,6 @@ services:
       ATL_PROXY_PORT: ${CONFLUENCE_PORT:-443}
     hostname: confluence
     restart: unless-stopped
-    depends_on:
-      - database
 
 volumes:
   confluence_data:

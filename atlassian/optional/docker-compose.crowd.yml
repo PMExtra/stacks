@@ -15,8 +15,6 @@ services:
       ATL_PROXY_PORT: ${CROWD_PORT:-443}
     hostname: crowd
     restart: unless-stopped
-    depends_on:
-      - database
 
 volumes:
   crowd_data:

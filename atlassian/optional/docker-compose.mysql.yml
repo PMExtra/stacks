@@ -1,7 +1,7 @@
 version: "3.8"
 
 services:
-  database:
+  mysql:
     container_name: atlassian_mysql
     image: mysql:${MYSQL_TAG:-8}
     volumes:
