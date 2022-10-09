@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VER=1.4.0
+VER=2.0.0
 PROJECT_NAME="upgrade"
 PROJECT_ENTRY="upgrade"
 
@@ -9,6 +9,8 @@ _ROOT_=$(dirname "$_SCRIPT_")
 stack=""
 skip_pull=false
 no_up=false
+hook_args=()
+docker_args=()
 
 showhelp() {
   version
@@ -50,32 +52,39 @@ _docker_compose() {
 # A wrapper to execute hook script with log
 # Usage: _execute_hook FILE
 _execute_hook() {
-  echo "> Found hook: $_hook, executing..."
+  _file=$1
+
+  if [ ! -f "$_file" ]; then
+    echo "> Error: Hook script '$_file' is not found."
+    return 1
+  fi
+
+  echo "> Found hook: $_file, executing..."
   # shellcheck source=/dev/null
-  . "$_hook" "$@"
+  . "$_file"
 }
 
 # To discovery and execute before-upgrade hook, the arguments will be passed to each hook
-# Usage: _before_upgrade [ARGUMENTS...]
+# Usage: _before_upgrade
 _before_upgrade() {
   _hook="./before-upgrade.sh"
   if [ -f "$_hook" ]; then
-    _execute_hook "$@"
+    _execute_hook "$_hook"
   fi
   while IFS= read -r -d $'\0' -u 3 _hook; do
-    _execute_hook "$@"
+    _execute_hook "$_hook"
   done 3< <(find . -maxdepth 1 -name 'before-upgrade.*.sh' -xtype f -print0 | sort -z)
 }
 
 # To discovery and execute after-upgrade hook, the arguments will be passed to each hook
-# Usage: _after_upgrade [ARGUMENTS...]
+# Usage: _after_upgrade
 _after_upgrade() {
   _hook="./after-upgrade.sh"
   if [ -f "$_hook" ]; then
-    _execute_hook "$@"
+    _execute_hook "$_hook"
   fi
   while IFS= read -r -d $'\0' -u 3 _hook; do
-    _execute_hook "$@"
+    _execute_hook "$_hook"
   done 3< <(find . -maxdepth 1 -name 'after-upgrade.*.sh' -xtype f -print0 | sort -z)
 }
 
@@ -117,14 +126,14 @@ _upgrade() {
   _hook="./custom-upgrade.sh"
   if [ -f "$_hook" ]; then
     # Execute the custom-upgrade hook rather than the default implementation if a custom-upgrade hook is found
-    _execute_hook "$@"
+    _execute_hook "$_hook"
     return
   fi
 
   echo "> Updating stack..."
   if $no_up; then
     # Execute the custom action if the user specifies '--no-up' option
-    _docker_compose "$@"
+    _docker_compose "${docker_args[@]}"
   else
     # Execute 'up' action by default except '--no-up' option was specified
 
@@ -132,7 +141,7 @@ _upgrade() {
     _try_build
 
     # Pass the arguments to the 'docker compose up' command. If no arguments is specified, it defaults to '-d'
-    _docker_compose up "${@:--d}"
+    _docker_compose up "${docker_args[@]:--d}"
   fi
 }
 
@@ -140,7 +149,7 @@ _upgrade() {
 # Usage: _parse_arguments [ARGUMENTS...]
 _parse_arguments() {
   while [ ${#} -gt 0 ]; do
-    case "${1}" in
+    case "$1" in
     --help | -h)
       showhelp
       exit 0
@@ -157,9 +166,13 @@ _parse_arguments() {
       skip_pull=true
       no_up=true
       ;;
+    --hook-args | -a)
+      hook_args+=("$1")
+      shift 1
+      ;;
     *)
       # Assume the first unknown argument to be the stack name
-      stack="${1}"
+      stack="$1"
       shift 1
       # Stop parsing the rest arguments, they will be passed to all hooks and docker compose command
       break
@@ -174,6 +187,8 @@ _parse_arguments() {
     showhelp
     exit 1
   fi
+
+  docker_args+=("$@")
 }
 
 # Main entrypoint
@@ -184,9 +199,9 @@ _process() {
   _parse_arguments "$@"
 
   cd "$stack"
-  _before_upgrade "$@"
-  _upgrade "$@"
-  _after_upgrade "$@"
+  _before_upgrade
+  _upgrade
+  _after_upgrade
 
   # Reset the flag
   set +e;

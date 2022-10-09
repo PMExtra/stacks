@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-if ${no_up:-} && [ "${1}" != 'up' ]; then
+if ${no_up:-} && [ "${docker_args[0]:-}" != 'up' ]; then
   return
 fi
 
