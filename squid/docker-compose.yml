@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  squid:
+    container_name: squid
+    image: ${IMAGE:-ubuntu/squid}:${TAG:-latest}
+    ports:
+      - "3128:3128"
+    volumes:
+      - cache:/var/spool/squid
+      - config:/etc/squid
+      - log:/var/log/squid
+    environment:
+      TZ: ${TIMEZONE:-Asia/Shanghai}
+    hostname: squid
+    restart: unless-stopped
+
+volumes:
+  cache:
+  config:
+  log:
+
+networks:
+  default:
+    name: squid
