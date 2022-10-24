@@ -1,0 +1,7 @@
+services:
+  traefik:
+    volumes:
+    - plugins:/plugins-local/
+
+volumes:
+  plugins:
