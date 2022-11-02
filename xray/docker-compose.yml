@@ -11,3 +11,7 @@ services:
 
 volumes:
   conf:
+
+networks:
+  default:
+    name: xray
