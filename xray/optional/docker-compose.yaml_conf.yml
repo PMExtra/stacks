@@ -1,3 +1,0 @@
-services:
-  xray:
-    command: xray -c /etc/xray/config.yml

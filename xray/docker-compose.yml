@@ -6,6 +6,8 @@ services:
     image: teddysun/xray:${TAG:-latest}
     volumes:
       - conf:/etc/xray
+    environment:
+      XRAY_LOCATION_CONFDIR: /etc/xray
 
 volumes:
   conf:
