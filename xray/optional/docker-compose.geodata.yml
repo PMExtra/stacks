@@ -1,0 +1,7 @@
+services:
+  xray:
+    volumes:
+      - geodata:/usr/share/xray
+
+volumes:
+  geodata:
