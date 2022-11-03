@@ -5,12 +5,14 @@ services:
     container_name: xray
     image: teddysun/xray:${TAG:-latest}
     volumes:
-      - conf:/etc/xray
+      - config:/etc/xray
     environment:
       XRAY_LOCATION_CONFDIR: /etc/xray
+    hostname: xray
+    restart: unless-stopped
 
 volumes:
-  conf:
+  config:
 
 networks:
   default:
