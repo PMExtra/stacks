@@ -1,0 +1,7 @@
+services:
+  mysql:
+    volumes:
+      - etc:/etc/mysql
+
+volumes:
+  etc:
