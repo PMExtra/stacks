@@ -1,0 +1,19 @@
+version: "3.8"
+
+services:
+  mitmproxy:
+    container_name: mitmproxy
+    image: mitmproxy/mitmproxy:${TAG:-latest}
+    ports:
+      - "8080:8080"
+    volumes:
+      - data:/home/mimtproxy/.mitmproxy
+    hostname: mitmproxy
+    restart: unless-stopped
+
+volumes:
+  data:
+
+networks:
+  default:
+    name: mitmproxy

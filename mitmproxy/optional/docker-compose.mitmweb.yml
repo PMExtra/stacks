@@ -1,0 +1,5 @@
+services:
+  mitmproxy:
+    ports:
+      - "8081:8081"
+    command: mitmweb --web-host 0.0.0.0
