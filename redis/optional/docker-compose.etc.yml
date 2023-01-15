@@ -1,0 +1,8 @@
+services:
+  redis:
+    volumes:
+      - etc:/etc/redis
+    command: redis-server "${REDIS_CONF_FILE:-/etc/redis/redis.conf}"
+
+volumes:
+  etc:

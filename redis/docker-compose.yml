@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  redis:
+    container_name: redis
+    image: redis:${TAG:-latest}
+    volumes:
+      - data:/data
+    hostname: redis
+    restart: unless-stopped
+
+volumes:
+  data:
+
+networks:
+  default:
+    name: redis
