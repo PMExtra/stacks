@@ -1,0 +1,22 @@
+version: "3.8"
+
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:${TAG:-latest}
+    volumes:
+      - data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+      - POSTGRES_HOST_AUTH_METHODsta
+    hostname: postgres
+    restart: unless-stopped
+
+volumes:
+  data:
+
+networks:
+  default:
+    name: postgres
