@@ -1,0 +1,21 @@
+version: "3.8"
+
+services:
+  zentao:
+    container_name: zentao
+    image: easysoft/zentao:${TAG:-latest}
+    volumes:
+      - data:/www/zentaopms
+      - mysql:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD
+    hostname: zentao
+    restart: unless-stopped
+
+volumes:
+  data:
+  mysql:
+
+networks:
+  default:
+    name: zentao
