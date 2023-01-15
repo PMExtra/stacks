@@ -1,0 +1,54 @@
+version: "3.8"
+
+services:
+  youdu:
+    container_name: youdu
+    image: xindaim/youdu:${TAG:-latest}
+    ports:
+      - '7006:7006'
+      - '7042:7042'
+      - '7080:7080'
+      - '7443:7443'
+    volumes:
+      - backup:/youdu/backup
+      - config:/youdu/config
+      - db:/youdu/db
+      - log:/youdu/log
+      - pkg:/youdu/pkg
+      - userportal_conf:/youdu/userportal/conf
+      - userportal_log:/youdu/userportal/log
+      - jgview_conf:/youdu/jgview/conf
+      - jgview_log:/youdu/jgview/log
+      - ydform_conf:/youdu/ydform/conf
+      - ydform_log:/youdu/ydform/log
+      - clockapp_conf:/youdu/apps/clockapp/conf
+      - clockapp_log:/youdu/apps/clockapp/log
+    environment:
+      - MYSQL_ADDR=${MYSQL_ADDR:-mysql:3306}
+      - MYSQL_USER=${MYSQL_USER:-root}
+      - MYSQL_PWD
+      - REDIS_ADDR
+      - REDIS_PWD
+      - MSG_DB_TYPE
+      - MONGO_ADDR
+    hostname: youdu
+    restart: unless-stopped
+
+volumes:
+  backup:
+  config:
+  db:
+  log:
+  pkg:
+  userportal_conf:
+  userportal_log:
+  jgview_conf:
+  jgview_log:
+  ydform_conf:
+  ydform_log:
+  clockapp_conf:
+  clockapp_log:
+
+networks:
+  default:
+    name: youdu
