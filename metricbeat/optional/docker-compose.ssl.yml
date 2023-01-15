@@ -1,0 +1,6 @@
+services:
+  metricbeat:
+    command: >-
+      -environment container
+      -E output.elasticsearch.ssl.enabled=true
+      -E output.elasticsearch.ssl.ca_trusted_fingerprint=${CA_TRUSTED_FINGERPRINT}

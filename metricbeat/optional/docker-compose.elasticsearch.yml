@@ -1,0 +1,6 @@
+services:
+  metricbeat:
+    environment:
+      - ELASTICSEARCH_HOSTS
+      - ELASTICSEARCH_USERNAME
+      - ELASTICSEARCH_PASSWORD

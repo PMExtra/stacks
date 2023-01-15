@@ -1,0 +1,4 @@
+services:
+  metricbeat:
+    environment:
+      - LOGSTASH_HOSTS
