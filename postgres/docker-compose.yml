@@ -10,7 +10,7 @@ services:
       - POSTGRES_USER
       - POSTGRES_PASSWORD
       - POSTGRES_DB
-      - POSTGRES_HOST_AUTH_METHODsta
+      - POSTGRES_HOST_AUTH_METHOD
     hostname: postgres
     restart: unless-stopped
 

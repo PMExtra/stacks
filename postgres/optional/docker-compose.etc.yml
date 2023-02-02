@@ -1,7 +1,0 @@
-services:
-  postgres:
-    volumes:
-      - etc:/etc/postgres
-
-volumes:
-  etc:

@@ -1,0 +1,10 @@
+services:
+  postgres:
+    image: localhost/build/postgres:${TAG:-latest}
+    build:
+      context: ./build
+      args:
+        - TAG
+        - DEBIAN_MIRROR
+        - POSTGRESQL_PUB_MIRROR
+        - INSTALL_PACKAGES
