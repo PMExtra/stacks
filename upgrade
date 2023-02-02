@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VER=2.0.1
+VER=2.1.0
 PROJECT_NAME="upgrade"
 PROJECT_ENTRY="upgrade"
 
@@ -197,7 +197,7 @@ _parse_arguments() {
     shift 1
   done
 
-  if [ -z "$stack" ]; then
+  if [ -z "$stack" ] && [ ! -f "docker-compose.yml" ]; then
     # If no stack name has been specified
     showhelp
     exit 1
