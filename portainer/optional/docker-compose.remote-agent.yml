@@ -1,7 +1,9 @@
 services:
   agent:
     container_name: portainer_agent
-    image: portainer/agent:${AGENT_TAG:-latest}
+    image: portainer/agent:${AGENT_TAG:-${TAG:-latest}}
+    ports:
+      - "9001:9001"
     volumes:
       - ${DOCKER_DATA_PATH:-/var/lib/docker}/volumes:/var/lib/docker/volumes
       - /var/run/docker.sock:/var/run/docker.sock
