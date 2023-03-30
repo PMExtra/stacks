@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  gogs:
+    container_name: gogs
+    image: gogs/gogs:${TAG:-latest}
+    volumes:
+      - data:/data
+    hostname: gogs
+    restart: unless-stopped
+
+volumes:
+  data:
+
+networks:
+  default:
+    name: gogs
