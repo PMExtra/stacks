@@ -1,0 +1,9 @@
+services:
+  zookeeper:
+    networks:
+      - default
+      - kafka
+
+networks:
+  kafka:
+    external: true
