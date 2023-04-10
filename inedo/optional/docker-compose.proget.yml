@@ -1,0 +1,13 @@
+services:
+  proget:
+    container_name: proget
+    image: ${REGISTRY:-proget.inedo.com/productimages/}inedo/proget:${PROGET_TAG:-latest}
+    volumes:
+      - packages:/var/proget/packages
+    environment:
+      - PROGET_SQL_CONNECTION_STRING=${PROGET_SQL_CONNECTION_STRING}
+    hostname: proget
+    restart: unless-stopped
+
+volumes:
+  packages:
