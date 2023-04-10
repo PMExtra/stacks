@@ -1,0 +1,4 @@
+services:
+  mssql:
+    ports:
+      - "1433:1433"
