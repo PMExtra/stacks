@@ -4,8 +4,6 @@ services:
   kafka:
     container_name: kafka
     image: bitnami/kafka:${TAG:-latest}
-    ports:
-      - "9092:9092"
     volumes:
       - data:/bitnami/kafka
     environment:
