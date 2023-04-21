@@ -6,6 +6,7 @@ services:
       - config:/etc/gitlab
       - data:/var/opt/gitlab
       - logs:/var/log/gitlab
+    shm_size: ${SHM_SIZE:-256m}
     hostname: gitlab
     restart: unless-stopped
 
