@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  filebeat:
+    container_name: filebeat
+    image: elastic/filebeat:${TAG:-latest}
+    volumes:
+      - "${DOCKER_SOCKET:-/var/run/docker.sock}:/var/run/docker.sock"
+      - "${DOCKER_DATA_PATH:-/var/lib/docker}/containers:/var/lib/docker/containers:ro"
+      - "./mount/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro"
+    user: root
+    hostname: filebeat
+    restart: unless-stopped
+
+networks:
+  default:
+    name: filebeat

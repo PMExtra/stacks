@@ -1,0 +1,4 @@
+services:
+  squid:
+    labels:
+      - co.elastic.logs/module=squid
