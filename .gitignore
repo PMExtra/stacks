@@ -1,4 +1,6 @@
 .env
+.*.flag
+.*.lock
 docker-compose.*.yml
 !*/optional/docker-compose.*.yml
 before-upgrade.*.sh

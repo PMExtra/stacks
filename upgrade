@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 
-VER=2.1.0
+VER=2.2.0
 PROJECT_NAME="upgrade"
 PROJECT_ENTRY="upgrade"
 
 _SCRIPT_="$0"
 _ROOT_=$(dirname "$_SCRIPT_")
+_find="find"
 stack=""
 skip_pull=false
 no_build=false
@@ -37,6 +38,39 @@ version() {
   echo "v$VER"
 }
 
+_confirm() {
+  message=$(echo -e -n "$1")
+  default_value="$2"
+  prompt_default_value=""
+
+  case $default_value in
+  [Yy])
+    prompt_default_value=" (Y/n)"
+    ;;
+  [Nn])
+    prompt_default_value=" (y/N)"
+    ;;
+  esac
+
+  read -rp "$message$prompt_default_value: " answer
+
+  if [[ -z $answer ]]; then
+    answer="$default_value"
+  fi
+
+  case $answer in
+  [Yy])
+    return 0
+    ;;
+  [Nn])
+    return 1
+    ;;
+  *)
+    exit 1
+    ;;
+  esac
+}
+
 # A wrapper of 'docker compose' command that can auto discovery all docker-compose.*.yml file in work directory
 # Usage: _docker_compose [ARGUMENTS...]
 _docker_compose() {
@@ -47,7 +81,7 @@ _docker_compose() {
   # https://stackoverflow.com/a/23357277/6401252
   while IFS= read -r -d $'\0' -u 3; do
     _compose_files+=(-f "$REPLY")
-  done 3< <(find . -maxdepth 1 -name 'docker-compose.*.yml' -xtype f -print0 | sort -z)
+  done 3< <($_find . -maxdepth 1 -name 'docker-compose.*.yml' -xtype f -print0 | sort -z)
 
   # Pass arguments to the original command
   docker compose "${_compose_files[@]}" "$@"
@@ -77,7 +111,7 @@ _before_upgrade() {
   fi
   while IFS= read -r -d $'\0' -u 3 _hook; do
     _execute_hook "$_hook"
-  done 3< <(find . -maxdepth 1 -name 'before-upgrade.*.sh' -xtype f -print0 | sort -z)
+  done 3< <($_find . -maxdepth 1 -name 'before-upgrade.*.sh' -xtype f -print0 | sort -z)
 }
 
 # To discovery and execute after-upgrade hook, the arguments will be passed to each hook
@@ -89,7 +123,7 @@ _after_upgrade() {
   fi
   while IFS= read -r -d $'\0' -u 3 _hook; do
     _execute_hook "$_hook"
-  done 3< <(find . -maxdepth 1 -name 'after-upgrade.*.sh' -xtype f -print0 | sort -z)
+  done 3< <($_find . -maxdepth 1 -name 'after-upgrade.*.sh' -xtype f -print0 | sort -z)
 }
 
 # Try to build local images if necessary
@@ -206,13 +240,51 @@ _parse_arguments() {
   docker_args+=("$@")
 }
 
+_error() {
+  >&2 echo "$@"
+}
+
+_check_env() {
+  _check_env_compose
+  _check_env_find
+}
+
+_check_env_compose() {
+  if docker compose version 2>/dev/null | grep -q 'Docker Compose version'; then
+    return
+  fi
+
+  _error "docker compose plugin was not found, visit https://docs.docker.com/compose/install/linux/ for more information."
+  exit 101
+}
+
+_check_env_find() {
+  # shellcheck disable=SC2185
+  if $_find --version 2>/dev/null | grep -q 'GNU'; then
+    return
+  fi
+
+  if gfind --version 2>/dev/null | grep -q 'GNU'; then
+    _find=gfind
+    return
+  fi
+
+  _error "GNU findutils was not found"
+  if [ "$(uname)" == "Darwin" ]; then
+    _error "It can work with gfind on macOS, you can get it from Homebrew."
+  fi
+  exit 102
+}
+
 # Main entrypoint
-_process() {
+main() {
   # Backup shopt
   shopt_bak="$(shopt -po xtrace errexit)"
 
   # Exit immediately if any error occurs (exits with a non-zero status)
   set -e;
+
+  _check_env
 
   _parse_arguments "$@"
 
@@ -230,4 +302,4 @@ _process() {
   eval "$shopt_bak"
 }
 
-_process "$@"
+main "$@"
