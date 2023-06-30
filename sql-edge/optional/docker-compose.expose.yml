@@ -1,0 +1,4 @@
+services:
+  sql-edge:
+    ports:
+      - "1433:1433"
