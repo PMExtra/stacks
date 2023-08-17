@@ -1,0 +1,19 @@
+version: "3.8"
+
+services:
+  wiki:
+    container_name: wiki
+    image: ${IMAGE:-requarks/wiki}:${TAG:-latest}
+    volumes:
+      - data:/wiki/data
+    env_file:
+      - ${DB_ENV_FILE:-.db.env}
+    hostname: wiki
+    restart: unless-stopped
+
+networks:
+  default:
+    name: requarks
+
+volumes:
+  data:
