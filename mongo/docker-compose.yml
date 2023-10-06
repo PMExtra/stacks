@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  mongo:
+    container_name: mongo
+    image: mongo:${TAG:-latest}
+    volumes:
+      - db:/data/db
+      - configdb:/data/configdb
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME
+      - MONGO_INITDB_ROOT_PASSWORD
+      - MONGO_INITDB_DATABASE
+    hostname: mongo
+    restart: unless-stopped
+
+volumes:
+  db:
+  configdb:
+
+networks:
+  default:
+    name: mongo
