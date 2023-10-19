@@ -1,0 +1,11 @@
+services:
+  jenkins:
+    container_name: jenkins
+    image: jenkins/jenkins:${TAG:-latest}
+    volumes:
+      - home:/var/jenkins_home
+    hostname: jenkins
+    restart: unless-stopped
+
+volumes:
+  home:
