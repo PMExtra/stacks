@@ -1,0 +1,21 @@
+version: "3.8"
+
+services:
+  openldap:
+    container_name: openldap
+    image: bitnami/openldap:${TAG:-latest}
+    ports:
+      - "389:${LDAP_PORT_NUMBER:-1389}"
+      - "636:${LDAP_LDAPS_PORT_NUMBER:-1636}"
+    volumes:
+      - data:/bitnami/openldap
+    env_file: .env
+    hostname: openldap
+    restart: unless-stopped
+
+volumes:
+  data:
+
+networks:
+  default:
+    name: ldap
