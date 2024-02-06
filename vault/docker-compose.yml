@@ -3,7 +3,7 @@ version: "3.8"
 services:
   vault:
     container_name: vault
-    image: vault:${TAG:-latest}
+    image: hashicorp/vault:${TAG:-latest}
     command: server
     volumes:
       - config:/vault/config
