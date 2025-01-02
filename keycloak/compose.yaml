@@ -1,0 +1,12 @@
+services:
+  keycloak:
+    container_name: keycloak
+    image: keycloak/keycloak:${TAG:-latest}
+    env_file: .env
+    hostname: keycloak
+    restart: unless-stopped
+    command: start
+
+networks:
+  default:
+    name: keycloak

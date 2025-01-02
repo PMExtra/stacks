@@ -1,6 +1,12 @@
 *.env
 .*.flag
 .*.lock
+compose.*.yaml
+!*/optional/compose.*.yaml
+compose.*.yml
+!*/optional/compose.*.yml
+docker-compose.*.yaml
+!*/optional/docker-compose.*.yaml
 docker-compose.*.yml
 !*/optional/docker-compose.*.yml
 before-upgrade.*.sh

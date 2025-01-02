@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
-VER=2.2.0
+VER="3.0.0"
 PROJECT_NAME="upgrade"
 PROJECT_ENTRY="upgrade"
 
-_SCRIPT_="$0"
-_ROOT_=$(dirname "$_SCRIPT_")
+_SCRIPT_="${0}"
+_ROOT_="$(dirname "${_SCRIPT_}")"
 _find="find"
 stack=""
 skip_pull=false
@@ -18,7 +18,7 @@ docker_args=()
 showhelp() {
   version
   echo "
-Usage: $PROJECT_ENTRY [OPTIONS]... STACK [PARAMETERS]...
+Usage: ${PROJECT_ENTRY} [OPTIONS]... STACK [PARAMETERS]...
 
 Options:
   -h, --help      Show this help message.
@@ -34,16 +34,16 @@ Parameters:
 }
 
 version() {
-  echo "$PROJECT_NAME"
-  echo "v$VER"
+  echo "${PROJECT_NAME}"
+  echo "v${VER}"
 }
 
 _confirm() {
-  message=$(echo -e -n "$1")
-  default_value="$2"
+  message="$(echo -e -n "${1}")"
+  default_value="${2}"
   prompt_default_value=""
 
-  case $default_value in
+  case "${default_value}" in
   [Yy])
     prompt_default_value=" (Y/n)"
     ;;
@@ -52,13 +52,13 @@ _confirm() {
     ;;
   esac
 
-  read -rp "$message$prompt_default_value: " answer
+  read -rp "${message}${prompt_default_value}: " answer
 
-  if [[ -z $answer ]]; then
-    answer="$default_value"
+  if [[ -z "${answer}" ]]; then
+    answer="${default_value}"
   fi
 
-  case $answer in
+  case "${answer}" in
   [Yy])
     return 0
     ;;
@@ -71,65 +71,85 @@ _confirm() {
   esac
 }
 
+# Find the basic compose file, see https://docs.docker.com/compose/intro/compose-application-model/#the-compose-file
+# Usage: _compose_file
+_compose_file() {
+  for file in compose.yaml compose.yml docker-compose.yaml docker-compose.yml; do
+    if [ -f "${file}" ]; then
+      echo "${file}"
+      return 0
+    fi
+  done
+  _error "No compose file found, please check the working directory."
+  return 1
+}
+
 # A wrapper of 'docker compose' command that can auto discovery all docker-compose.*.yml file in work directory
 # Usage: _docker_compose [ARGUMENTS...]
 _docker_compose() {
   # The main docker-compose.yml is required
-  _compose_files=(-f ./docker-compose.yml)
+  _compose_files=(-f "$(_compose_file)")
+
+  _broken_files="$(${_find} . -maxdepth 1 -regex '\./\(docker-\)?compose\..+.ya?ml' -xtype l)"
+  if [ -n "${_broken_files}" ]; then
+    _error "Found broken links, please fix them first:"
+    _error "${_broken_files}"
+    exit 1
+  fi
 
   # Discovery other docker-compose.*.yml file, sort by name
   # https://stackoverflow.com/a/23357277/6401252
   while IFS= read -r -d $'\0' -u 3; do
-    _compose_files+=(-f "$REPLY")
-  done 3< <($_find . -maxdepth 1 -name 'docker-compose.*.yml' -xtype f -print0 | sort -z)
+    _compose_files+=(-f "${REPLY}")
+  done 3< <(${_find} . -maxdepth 1 -regex '\./\(docker-\)?compose\..+.ya?ml' -xtype f -print0 | sort -z)
 
   # Pass arguments to the original command
-  docker compose "${_compose_files[@]}" "$@"
+  docker compose "${_compose_files[@]}" "${@}"
 }
 
 # A wrapper to execute hook script with log
 # Usage: _execute_hook FILE
 _execute_hook() {
-  _file=$1
+  _file="${1}"
 
-  if [ ! -f "$_file" ]; then
-    echo "> Error: Hook script '$_file' is not found."
+  if [ ! -f "${_file}" ]; then
+    echo "> Error: Hook script '${_file}' is not found."
     return 1
   fi
 
-  echo "> Found hook: $_file, executing..."
+  echo "> Found hook: ${_file}, executing..."
   # shellcheck source=/dev/null
-  . "$_file"
+  . "${_file}"
 }
 
 # To discovery and execute before-upgrade hook, the arguments will be passed to each hook
 # Usage: _before_upgrade
 _before_upgrade() {
   _hook="./before-upgrade.sh"
-  if [ -f "$_hook" ]; then
-    _execute_hook "$_hook"
+  if [ -f "${_hook}" ]; then
+    _execute_hook "${_hook}"
   fi
   while IFS= read -r -d $'\0' -u 3 _hook; do
-    _execute_hook "$_hook"
-  done 3< <($_find . -maxdepth 1 -name 'before-upgrade.*.sh' -xtype f -print0 | sort -z)
+    _execute_hook "${_hook}"
+  done 3< <(${_find} . -maxdepth 1 -name 'before-upgrade.*.sh' -xtype f -print0 | sort -z)
 }
 
 # To discovery and execute after-upgrade hook, the arguments will be passed to each hook
 # Usage: _after_upgrade
 _after_upgrade() {
   _hook="./after-upgrade.sh"
-  if [ -f "$_hook" ]; then
-    _execute_hook "$_hook"
+  if [ -f "${_hook}" ]; then
+    _execute_hook "${_hook}"
   fi
   while IFS= read -r -d $'\0' -u 3 _hook; do
-    _execute_hook "$_hook"
-  done 3< <($_find . -maxdepth 1 -name 'after-upgrade.*.sh' -xtype f -print0 | sort -z)
+    _execute_hook "${_hook}"
+  done 3< <(${_find} . -maxdepth 1 -name 'after-upgrade.*.sh' -xtype f -print0 | sort -z)
 }
 
 # Try to build local images if necessary
 # Usage: _try_build
 _try_build() {
-  if $no_build; then
+  if "${no_build}"; then
     # Skip build if user specifies to '--no-build' option
     return
   fi
@@ -137,7 +157,7 @@ _try_build() {
   if grep -q '^\s*build:' docker-compose.*yml; then
     # Build the images first if any images need to be built
 
-    if $skip_pull; then
+    if "${skip_pull}"; then
       # Build the local images directly if the user specifies '--skip-pull' option
       echo "> Building local images..."
       _docker_compose build
@@ -155,7 +175,7 @@ _try_build() {
   else
     # No images need to be built
 
-    if ! $skip_pull; then
+    if ! "${skip_pull}"; then
       # Pull images except user specifies to '--skip-pull' option
       echo "> Pulling images..."
       _docker_compose pull
@@ -167,14 +187,14 @@ _try_build() {
 # Usage: _upgrade [ARGUMENTS...]
 _upgrade() {
   _hook="./custom-upgrade.sh"
-  if [ -f "$_hook" ]; then
+  if [ -f "${_hook}" ]; then
     # Execute the custom-upgrade hook rather than the default implementation if a custom-upgrade hook is found
-    _execute_hook "$_hook"
+    _execute_hook "${_hook}"
     return
   fi
 
   echo "> Updating stack..."
-  if $no_up; then
+  if "${no_up}"; then
     # Execute the custom action if the user specifies '--no-up' option
     _docker_compose "${docker_args[@]}"
   else
@@ -191,8 +211,8 @@ _upgrade() {
 # To parse the arguments
 # Usage: _parse_arguments [ARGUMENTS...]
 _parse_arguments() {
-  while [ ${#} -gt 0 ]; do
-    case "$1" in
+  while [ "${#}" -gt 0 ]; do
+    case "${1}" in
     --help | -h)
       showhelp
       exit 0
@@ -216,12 +236,12 @@ _parse_arguments() {
       no_build=true
       ;;
     --hook-args | -a)
-      hook_args+=("$1")
+      hook_args+=("${1}")
       shift 1
       ;;
     *)
       # Assume the first unknown argument to be the stack name
-      stack="$1"
+      stack="${1}"
       shift 1
       # Stop parsing the rest arguments, they will be passed to all hooks and docker compose command
       break
@@ -231,17 +251,17 @@ _parse_arguments() {
     shift 1
   done
 
-  if [ -z "$stack" ] && [ ! -f "docker-compose.yml" ]; then
+  if [ -z "${stack}" ] && [ ! -f "docker-compose.yml" ]; then
     # If no stack name has been specified
     showhelp
     exit 1
   fi
 
-  docker_args+=("$@")
+  docker_args+=("${@}")
 }
 
 _error() {
-  >&2 echo "$@"
+  >&2 echo "${@}"
 }
 
 _check_env() {
@@ -260,7 +280,7 @@ _check_env_compose() {
 
 _check_env_find() {
   # shellcheck disable=SC2185
-  if $_find --version 2>/dev/null | grep -q 'GNU'; then
+  if "${_find}" --version 2>/dev/null | grep -q 'GNU'; then
     return
   fi
 
@@ -286,20 +306,20 @@ main() {
 
   _check_env
 
-  _parse_arguments "$@"
+  _parse_arguments "${@}"
 
-  if $debug; then
+  if "${debug}"; then
     # Trace executed commands if the user specifies '--debug' option
     set -x;
   fi
 
-  cd "$stack"
+  cd "${stack}"
   _before_upgrade
   _upgrade
   _after_upgrade
 
   # Reset the flag
-  eval "$shopt_bak"
+  eval "${shopt_bak}"
 }
 
-main "$@"
+main "${@}"

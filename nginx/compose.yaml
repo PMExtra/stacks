@@ -1,0 +1,19 @@
+services:
+  nginx:
+    container_name: nginx
+    image: nginx:${TAG:-latest}
+    volumes:
+      - etc:/etc/nginx
+      - www:/var/www
+      - log:/var/log/nginx
+    hostname: nginx
+    restart: unless-stopped
+
+volumes:
+  etc:
+  www:
+  log:
+
+networks:
+  default:
+    name: nginx

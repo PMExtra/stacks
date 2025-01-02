@@ -1,0 +1,16 @@
+services:
+  vaultwarden:
+    container_name: vaultwarden
+    image: vaultwarden/server:${TAG:-latest}
+    volumes:
+      - data:/data
+    env_file: .env
+    hostname: vaultwarden
+    restart: unless-stopped
+
+volumes:
+  data:
+
+networks:
+  default:
+    name: vaultwarden
