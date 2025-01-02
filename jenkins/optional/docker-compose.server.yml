@@ -1,6 +1,6 @@
 services:
-  jenkins:
-    container_name: jenkins
+  controller:
+    container_name: jenkins_controller
     image: jenkins/jenkins:${TAG:-latest}
     volumes:
       - home:/var/jenkins_home

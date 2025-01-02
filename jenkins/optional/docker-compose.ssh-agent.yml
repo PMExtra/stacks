@@ -1,0 +1,5 @@
+services:
+  ssh-agent:
+    container_name: jenkins_ssh-agent
+    image: jenkins/ssh-agent:${RUNNER_TAG:-latest}
+    restart: unless-stopped
