@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VER="3.0.0"
+VER="3.0.1"
 PROJECT_NAME="upgrade"
 PROJECT_ENTRY="upgrade"
 
@@ -84,6 +84,12 @@ _compose_file() {
   return 1
 }
 
+# Find all compose files exclude the main compose file, split by \0
+# Usage: _compose_files
+_extra_compose_files() {
+  ${_find} . -maxdepth 1 -regex '\./\(docker-\)?compose\..+.ya?ml' -xtype f -print0 | sort -z
+}
+
 # A wrapper of 'docker compose' command that can auto discovery all docker-compose.*.yml file in work directory
 # Usage: _docker_compose [ARGUMENTS...]
 _docker_compose() {
@@ -97,11 +103,10 @@ _docker_compose() {
     exit 1
   fi
 
-  # Discovery other docker-compose.*.yml file, sort by name
   # https://stackoverflow.com/a/23357277/6401252
   while IFS= read -r -d $'\0' -u 3; do
     _compose_files+=(-f "${REPLY}")
-  done 3< <(${_find} . -maxdepth 1 -regex '\./\(docker-\)?compose\..+.ya?ml' -xtype f -print0 | sort -z)
+  done 3< <(_extra_compose_files)
 
   # Pass arguments to the original command
   docker compose "${_compose_files[@]}" "${@}"
@@ -154,7 +159,7 @@ _try_build() {
     return
   fi
 
-  if grep -q '^\s*build:' docker-compose.*yml; then
+  if _extra_compose_files | xargs -0 grep -q '^\s*build:' "$(_compose_file)"; then
     # Build the images first if any images need to be built
 
     if "${skip_pull}"; then
@@ -251,7 +256,7 @@ _parse_arguments() {
     shift 1
   done
 
-  if [ -z "${stack}" ] && [ ! -f "docker-compose.yml" ]; then
+  if [ -z "${stack}" ] && ! _compose_file >/dev/null 2>&1; then
     # If no stack name has been specified
     showhelp
     exit 1
