@@ -1,0 +1,7 @@
+services:
+  v2ray:
+    volumes:
+      - log:/var/log/v2ray
+
+volumes:
+  log:

@@ -1,0 +1,7 @@
+services:
+  v2ray:
+    volumes:
+      - asset:/usr/local/share/v2ray
+
+volumes:
+  asset:
