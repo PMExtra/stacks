@@ -1,7 +1,7 @@
 services:
   gitlab:
     ports:
-      - "${SSH_PORT:-2222}:22"
+      - "${SSH_LISTEN:-127.0.0.1}:${SSH_PORT:-2222}:22"
     volumes:
       - /var/opt/gitlab/.ssh:/var/opt/gitlab/.ssh
       - /var/opt/gitlab/.ssh/id_rsa.pub:/gitlab-data/ssh/authorized_keys
