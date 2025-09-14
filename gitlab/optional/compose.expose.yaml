@@ -1,0 +1,7 @@
+services:
+  gitlab:
+    ports:
+      # SSH cannot be exposed on default port 22 as it's typically already in use by the host system
+      # For SSH access, refer to compose.ssh.yaml
+      - "80:80"
+      - "443:443"

@@ -1,7 +1,20 @@
+# 1. Run `useradd -d /var/opt/gitlab git` on the host system
+# 2. Run `id git` to get the uid and gid on the host system
+# 2. Run `sudo -u git ssh-keygen` on the host system
+# 3. Set `SSH_PUBLIC_KEY` variable if it is not `id_rsa.pub`
+# 4. Configure `user['uid']`, `user['gid']` and `managed_accounts['enable'] = true` in `gitlab.rb`
+# 5. Write `/opt/gitlab/embedded/service/gitlab-shell/bin/gitlab-shell` file with the following content:
+#    ```
+#    #!/bin/sh
+#    ssh -p 2222 git@localhost "SSH_ORIGINAL_COMMAND=$(env printf "%q" "$SSH_ORIGINAL_COMMAND")" "$0" "$@"
+#    ```
+# 6. Startup GitLab
+# 7. Run `sudo -u git ssh -p 2222 git@localhost` on the host system to save the SSH host key
+
 services:
   gitlab:
     ports:
-      - "${SSH_LISTEN:-127.0.0.1}:${SSH_PORT:-2222}:22"
+      - "${SSH_LISTEN:-[::1]}:${SSH_PORT:-2222}:22"
     volumes:
       - /var/opt/gitlab/.ssh:/var/opt/gitlab/.ssh
-      - /var/opt/gitlab/.ssh/id_rsa.pub:/gitlab-data/ssh/authorized_keys
+      - /var/opt/gitlab/.ssh/${SSH_PUBLIC_KEY:-id_rsa.pub}:/gitlab-data/ssh/authorized_keys
