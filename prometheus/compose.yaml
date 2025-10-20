@@ -1,0 +1,17 @@
+services:
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus:${TAG:-latest}
+    volumes:
+      - etc:/etc/prometheus
+      - data:/prometheus
+    hostname: prometheus
+    restart: unless-stopped
+
+volumes:
+  etc:
+  data:
+
+networks:
+  default:
+    name: prometheus
