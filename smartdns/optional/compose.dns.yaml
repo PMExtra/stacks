@@ -1,0 +1,4 @@
+services:
+  smartdns:
+    ports:
+      - "53:53/udp"
