@@ -1,0 +1,36 @@
+services:
+  redis:
+    image: redis:8-alpine
+    volumes:
+      - redis_data:/data
+    command: >
+        sh -c '
+          redis-server
+          --save 60 1
+          --appendonly yes
+          --appendfsync everysec
+          ${REDIS_PASSWORD:+--requirepass "$REDIS_PASSWORD"}'
+    environment:
+      TZ: ${TZ:-Asia/Shanghai}
+      REDISCLI_AUTH: ${REDIS_PASSWORD:-}
+    hostname: redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  sub2api:
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_DB: 0
+    depends_on:
+      redis:
+        condition: service_healthy
+
+volumes:
+  redis_data:
