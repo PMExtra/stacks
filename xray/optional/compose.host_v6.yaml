@@ -1,0 +1,3 @@
+services:
+  xray:
+    network_mode: host
