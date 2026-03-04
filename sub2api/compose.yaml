@@ -9,6 +9,7 @@ services:
       SERVER_HOST: 0.0.0.0
       SERVER_PORT: 80
       SERVER_MODE: ${SERVER_MODE:-release}
+      SERVER_FRONTEND_URL: ${SERVER_FRONTEND_URL:-}
       RUN_MODE: ${RUN_MODE:-standard}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@sub2api.local}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
