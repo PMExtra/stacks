@@ -1,0 +1,3 @@
+services:
+  sub2api:
+    image: ghcr.io/pmextra/sub2api:${TAG:-latest}
