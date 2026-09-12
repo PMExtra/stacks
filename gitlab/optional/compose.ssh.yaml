@@ -1,20 +1,66 @@
-# 1. Run `useradd -d /var/opt/gitlab git` on the host system
-# 2. Run `id git` to get the uid and gid on the host system
-# 2. Run `sudo -u git ssh-keygen` on the host system
-# 3. Set `SSH_PUBLIC_KEY` variable if it is not `id_rsa.pub`
-# 4. Configure `user['uid']`, `user['gid']` and `managed_accounts['enable'] = true` in `gitlab.rb`
-# 5. Write `/opt/gitlab/embedded/service/gitlab-shell/bin/gitlab-shell` file with the following content:
-#    ```
-#    #!/bin/sh
-#    ssh -p 2222 git@localhost "SSH_ORIGINAL_COMMAND=$(env printf "%q" "$SSH_ORIGINAL_COMMAND")" "$0" "$@"
-#    ```
-# 6. Startup GitLab
-# 7. Run `sudo -u git ssh -p 2222 git@localhost` on the host system to save the SSH host key
+x-setup-notes: |
+  1. Create the host git user with fixed UID/GID and home directory:
+
+  ```bash
+  groupadd -g 2222 git
+  useradd -u 2222 -g 2222 -d /var/opt/gitlab -m -s /bin/sh git
+  ```
+
+  2. Create the SSH directory and generate the trampoline key:
+
+  ```bash
+  install -d -m 700 -o git -g git /var/opt/gitlab/.ssh
+  sudo -u git ssh-keygen -t ed25519 -f /var/opt/gitlab/.ssh/gitlab_trampoline -N ''
+  ```
+
+  3. Configure GitLab with the same UID/GID in gitlab.rb:
+
+  ```ruby
+  user['uid'] = 2222
+  user['gid'] = 2222
+  manage_accounts['enable'] = true
+  ```
+
+  4. Install the host gitlab-shell wrapper:
+
+  ```bash
+  install -d /opt/gitlab/embedded/service/gitlab-shell/bin
+
+  printf '%s\n' \
+    '#!/bin/sh' \
+    'exec ssh \' \
+    '  -o BatchMode=yes \' \
+    '  -o StrictHostKeyChecking=accept-new \' \
+    '  -i /var/opt/gitlab/.ssh/gitlab_trampoline \' \
+    '  -p 2222 git@127.0.0.1 \' \
+    '  "SSH_ORIGINAL_COMMAND=$(env printf "%q" "$SSH_ORIGINAL_COMMAND")" \' \
+    '  "$0" "$@"' \
+    >/opt/gitlab/embedded/service/gitlab-shell/bin/gitlab-shell
+
+  chmod 755 /opt/gitlab/embedded/service/gitlab-shell/bin/gitlab-shell
+  ```
+
+  5. Harden host SSH access for the git user:
+
+  ```bash
+  printf '%s\n' \
+    'Match User git' \
+    '    PasswordAuthentication no' \
+    '    KbdInteractiveAuthentication no' \
+    '    X11Forwarding no' \
+    '    AllowAgentForwarding no' \
+    '    AllowTcpForwarding no' \
+    '    PermitTunnel no' \
+    '    PermitTTY no' \
+    >/etc/ssh/sshd_config.d/git.conf
+
+  systemctl reload ssh
+  ```
 
 services:
   gitlab:
     ports:
-      - "${SSH_LISTEN:-[::1]}:${SSH_PORT:-2222}:22"
+      - "127.0.0.1:${SSH_PORT:-2222}:22"
     volumes:
       - /var/opt/gitlab/.ssh:/var/opt/gitlab/.ssh
-      - /var/opt/gitlab/.ssh/${SSH_PUBLIC_KEY:-id_rsa.pub}:/gitlab-data/ssh/authorized_keys
+      - /var/opt/gitlab/.ssh/gitlab_trampoline.pub:/gitlab-data/ssh/authorized_keys:ro
