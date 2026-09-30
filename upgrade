@@ -25,6 +25,7 @@ Options:
   -d, --debug     Trace executed commands for debugging.
   -n, --no-up     Execute custom command instead of up.
   --no-build      Force skip building images.
+  -a, --hook-args VALUE  Append a value to the hook_args array available to hooks.
   -s, --skip-pull Don't check for image updates if there is a local image.
   -v, --version   Show version info.
 
@@ -241,7 +242,11 @@ _parse_arguments() {
       no_build=true
       ;;
     --hook-args | -a)
-      hook_args+=("${1}")
+      if [ "${#}" -lt 2 ]; then
+        _error "${1} requires an argument."
+        exit 1
+      fi
+      hook_args+=("${2}")
       shift 1
       ;;
     *)
