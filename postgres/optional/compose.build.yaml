@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: localhost/build/postgres:${TAG:-latest}
+    image: localhost/build/postgres:${TAG:?Set TAG explicitly in postgres/.env to select a PostgreSQL version}
     build:
       context: ./build
       args:

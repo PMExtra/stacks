@@ -1,7 +1,7 @@
 services:
   postgres:
     container_name: postgres
-    image: postgres:${TAG:-latest}
+    image: postgres:${TAG:?Set TAG explicitly in postgres/.env to select a PostgreSQL version}
     environment:
       - POSTGRES_USER
       - POSTGRES_PASSWORD

@@ -17,5 +17,8 @@ The data-layout tests cover absent, data-only, legacy-only and both configuratio
 for the standalone PostgreSQL hook. Configuration tests require Docker Compose
 and parse temporary copies to check volume names, mount targets and PGDATA,
 including sub2api's PostgreSQL 18 mount and external-database configuration.
+Standalone PostgreSQL configuration tests also reject missing or empty `TAG`
+and preserve explicit `17`, `18` and `latest` tags, including the local-build
+overlay. The data-layout hook is unchanged.
 No images are
 pulled, containers started or existing data volumes accessed.
