@@ -20,9 +20,10 @@ the port for a non-default port).
 The default stack publishes no host ports. For a container reverse proxy, attach
 its service to the external Docker network `redapp` and route to `redapp:8080`.
 By default, the application trusts no forwarded headers. When forwarded client
-IPs are needed, uncomment `REDAPP_TRUSTED_PROXIES` in both `redapp/compose.yaml`
-and `redapp/.env`, then set it to the smallest verified proxy peer IP/CIDR set
-on the container network. Never use
+IPs are needed, add `REDAPP_TRUSTED_PROXIES` to `redapp/.env` with the smallest
+verified proxy peer IP/CIDR set on the container network (comma-separated;
+prefer `/32` for IPv4 or `/128` for IPv6). An unset or empty value keeps the
+application's default behavior of trusting no forwarded headers. Never use
 `0.0.0.0/0`, `::/0`, or a range covering untrusted clients. The proxy must overwrite
 incoming forwarding headers. Use HTTPS, disable proxy buffering, allow a 600s
 proxy read timeout, and restrict access through the proxy or network policy:

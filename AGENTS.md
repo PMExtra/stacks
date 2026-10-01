@@ -4,8 +4,18 @@ Apply these defaults when adding or maintaining any stack:
 
 - Use `${TAG:-latest}` for the image tag so operators can override it.
 - Configure environment variables only when required for deployment or when
-  intentionally changing application defaults. Keep optional settings commented
-  with a short explanation; do not repeat defaults unnecessarily.
+  intentionally changing application defaults; do not repeat defaults unnecessarily.
+- Do not leave commented-out code or configuration placeholders. Use environment
+  variables for simple optional settings; do not add a separate enablement switch.
+  Publish optional Compose structure in `optional/compose.*.yaml` and enable it
+  with a stack-local symlink. Keep explanatory comments where useful.
+- Choose `environment` entries or `env_file: .env` case by case. Favor explicit
+  entries for a small set of variables operators usually configure, and `env_file`
+  for many optional advanced settings usually left at application defaults.
+  These are tendencies, not hard rules. Passing additional non-sensitive stack
+  variables such as `TAG` through `env_file` is acceptable. Compose's
+  `.env` interpolation does not itself pass values into the container;
+  `environment` entries override `env_file` values. Keep required-value validation.
 - Omit `platform` by default so Docker selects the host architecture from the
   image manifest. Check supported architectures rather than assuming third-party
   images are multi-platform.
