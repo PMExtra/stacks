@@ -2,8 +2,6 @@ services:
   postgres:
     container_name: postgres
     image: postgres:${TAG:-latest}
-    volumes:
-      - data:/var/lib/postgresql/data
     environment:
       - POSTGRES_USER
       - POSTGRES_PASSWORD
