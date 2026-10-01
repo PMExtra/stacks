@@ -1,0 +1,23 @@
+services:
+  redapp:
+    container_name: redapp
+    image: ghcr.io/pmextra/redapp:${TAG:-v0.1.0}
+    platform: linux/amd64
+    volumes:
+      - data:/data
+    environment:
+      REDAPP_DATA: /data
+      REDAPP_LISTEN: :8080
+      REDAPP_PUBLIC_URL: ${REDAPP_PUBLIC_URL:?Set REDAPP_PUBLIC_URL to the external HTTP(S) origin in redapp/.env}
+      REDAPP_TRUSTED_PROXIES: ${REDAPP_TRUSTED_PROXIES:-}
+    read_only: true
+    stop_grace_period: 30s
+    hostname: redapp
+    restart: unless-stopped
+
+volumes:
+  data:
+
+networks:
+  default:
+    name: redapp
