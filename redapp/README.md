@@ -1,8 +1,8 @@
 # RedApp
 
 [RedApp](https://github.com/PMExtra/RedApp) caches Codex CLI downloads and provides
-an admin page. This stack uses `ghcr.io/pmextra/redapp:v0.1.0`, currently published
-for Linux/amd64. Use an amd64 host; anonymous GHCR pull access has not been verified.
+an admin page. This stack uses `ghcr.io/pmextra/redapp:v0.2.0` for Linux/amd64.
+Use an amd64 host; anonymous GHCR pull access has not been verified.
 If pulling is forbidden, resolve registry access before deployment.
 
 From the repository root, prepare configuration:
@@ -40,11 +40,13 @@ Open the configured origin at `/admin/`. The first-start logs show the initial
 random admin password only once; protect these logs and change the password
 after signing in. No credentials are supplied by this stack.
 
-The named volume `redapp_data` persists the entire `/data` directory, including
-SQLite, WAL/SHM, cached objects and the instance lock. Run only one instance per
-local data volume; NFS/SMB shared storage is unsupported. The image runs as
-UID/GID 65532 and provides its own health check. The root filesystem is read-only,
-while `/data` stays writable; the 30s stop grace period covers RedApp's 15s shutdown
+The named volume `redapp_data` persists the entire `/var/lib/redapp` directory,
+including SQLite, WAL/SHM, cached objects and the instance lock. Run only one
+instance per local data volume; NFS/SMB shared storage is unsupported. The v0.2.0
+image prepares this directory with UID/GID 65532 and mode 0700, runs as that
+non-root user, and provides its own health check. The stack explicitly sets
+`REDAPP_DATA=/var/lib/redapp`. The root filesystem is read-only, while the data
+volume stays writable; the 30s stop grace period covers RedApp's 15s shutdown
 wait. Before upgrading `TAG`, stop and back up the whole volume:
 
 ```sh
