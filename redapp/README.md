@@ -18,17 +18,9 @@ the port for a non-default port).
 
 The default stack publishes no host ports. For a container reverse proxy, attach
 its service to the external Docker network `redapp` and route to `redapp:8080`.
-For a reverse proxy running on the host, enable the loopback-only port overlay:
-
-```sh
-ln -s optional/compose.expose.yaml redapp/compose.expose.yaml
-```
-
-The host proxy can then route to `127.0.0.1:8080`; change `REDAPP_PORT` if needed.
 Set `REDAPP_TRUSTED_PROXIES` explicitly to the smallest actual proxy peer IP/CIDR
-set when forwarded client IPs are needed. For host proxies, the peer observed
-through Docker may be the bridge gateway, rather than `127.0.0.1`; verify it on
-the deployment host. Leave the value empty until verified. Never use
+set when forwarded client IPs are needed. Verify the proxy's peer address on
+the container network; leave the value empty until verified. Never use
 `0.0.0.0/0`, `::/0`, or a range covering untrusted clients. The proxy must overwrite
 incoming forwarding headers. Use HTTPS, disable proxy buffering, allow a 600s
 proxy read timeout, and restrict access through the proxy or network policy:
