@@ -5,7 +5,7 @@ services:
     volumes:
       - data:/var/lib/redapp
     environment:
-      REDAPP_PUBLIC_URL: ${REDAPP_PUBLIC_URL:?Set REDAPP_PUBLIC_URL to the external HTTP(S) origin in redapp/.env}
+      REDAPP_PUBLIC_URL: ${REDAPP_PUBLIC_URL:-}
       REDAPP_TRUSTED_PROXIES: ${REDAPP_TRUSTED_PROXIES:-}
     read_only: true
     stop_grace_period: 30s

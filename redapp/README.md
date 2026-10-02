@@ -6,16 +6,19 @@ selects the host architecture from the image manifest. Set `TAG` in `redapp/.env
 to pin a release if needed. Anonymous GHCR pull access has not been verified.
 If pulling is forbidden, resolve registry access before deployment.
 
-From the repository root, prepare configuration:
+From the repository root, optionally prepare configuration:
 
 ```sh
 cp redapp/.env.example redapp/.env
 ```
 
-Edit `redapp/.env`: set `REDAPP_PUBLIC_URL` to the external HTTP(S) origin, such as
-`https://codex.example.internal`, without a subpath. Compose rejects an unset or
-empty value. The reverse proxy must send a Host matching this origin (including
-the port for a non-default port).
+`REDAPP_PUBLIC_URL` is optional with RedApp v0.3.0 or later: leave it unset or
+empty to use the application's safe origin inference. To set an explicit origin,
+edit `redapp/.env` and set `REDAPP_PUBLIC_URL` to the external HTTP(S) origin, such
+as `https://codex.example.internal`, without a subpath. Explicit values retain
+the existing behavior: the reverse proxy must send a Host matching this origin
+(including the port for a non-default port). If pinning a release older than
+v0.3.0, set an explicit origin.
 
 The default stack publishes no host ports. For a container reverse proxy, attach
 its service to the external Docker network `redapp` and route to `redapp:8080`.
@@ -39,7 +42,7 @@ Validate and deploy through the repository's supported entry point:
 ./upgrade --no-up redapp logs redapp
 ```
 
-Open the configured origin at `/admin/`. The first-start logs show the initial
+Open the external origin at `/admin/`. The first-start logs show the initial
 random admin password only once; protect these logs and change the password
 after signing in. No credentials are supplied by this stack.
 
@@ -48,9 +51,9 @@ including SQLite, WAL/SHM, cached objects and the instance lock. Run only one
 instance per local data volume; NFS/SMB shared storage is unsupported. The
 image prepares this directory with UID/GID 65532 and mode 0700, runs as that
 non-root user, and provides its own health check. Data location and listening
-address use the image's defaults (`/var/lib/redapp` and `:8080`). Only the external
-public URL is required by this stack so proxy requests match the configured
-origin. The root filesystem is read-only, while the data
+address use the image's defaults (`/var/lib/redapp` and `:8080`). The external
+public URL may be unset or empty with RedApp v0.3.0 or later, or explicitly set
+to fix the expected origin. The root filesystem is read-only, while the data
 volume stays writable; the 30s stop grace period covers RedApp's 15s shutdown
 wait. Before upgrading `TAG`, stop and back up the whole volume:
 
