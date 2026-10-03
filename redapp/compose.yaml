@@ -4,9 +4,9 @@ services:
     image: ghcr.io/pmextra/redapp:${TAG:-latest}
     volumes:
       - data:/var/lib/redapp
-    environment:
-      REDAPP_PUBLIC_URL: ${REDAPP_PUBLIC_URL:-}
-      REDAPP_TRUSTED_PROXIES: ${REDAPP_TRUSTED_PROXIES:-}
+    env_file:
+      - path: ./.env
+        required: false
     read_only: true
     stop_grace_period: 30s
     hostname: redapp
