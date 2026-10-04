@@ -2,7 +2,7 @@
 
 [RedApp](https://github.com/PMExtra/RedApp) redistributes Codex CLI and Claude Code
 downloads and provides an admin page. This stack tracks only the latest RedApp;
-configuration is verified with v0.6.3. Older configuration formats are not
+this configuration targets v0.7.0. Older configuration formats are not
 maintained. This stack defaults to `ghcr.io/pmextra/redapp:latest`; Docker selects
 the host architecture from the image manifest. Set `TAG` in `redapp/.env`
 to pin a release if needed. Anonymous GHCR pull access has not been verified.
@@ -71,6 +71,7 @@ downloads do not require admin login. See the upstream
 [operations guide](https://github.com/PMExtra/RedApp/blob/main/docs/operations.md)
 for a proxy configuration example.
 
+Before the first v0.7.0 start, follow the fresh-volume requirements below.
 Validate and deploy through the repository's supported entry point:
 
 ```sh
@@ -83,7 +84,8 @@ Open the external origin at `/admin/`. The first-start logs show the initial
 random admin password only once; protect these logs and change the password
 after signing in. No credentials are supplied by this stack.
 
-The named volume `redapp_data` persists the entire `/var/lib/redapp` directory,
+The logical volume `data_v070` (normally `redapp_data_v070`) persists the entire
+`/var/lib/redapp` directory,
 including SQLite, WAL/SHM, cached objects and the instance lock. Run only one
 instance per local data volume; NFS/SMB shared storage is unsupported. The
 image prepares this directory with UID/GID 65532 and mode 0700, runs as that
@@ -94,16 +96,26 @@ admin override. The root filesystem is read-only, while the data
 volume stays writable; the 30s stop grace period covers RedApp's 15s shutdown
 wait.
 
-This stack does not migrate or replace existing data volumes. Check the latest
-RedApp release's data-format requirements before upgrading; archive incompatible
-data rather than overwriting it. Before upgrading
-`TAG`, stop and back up the whole volume:
+RedApp v0.7.0 requires a fresh empty data directory for the upgrade. Its SQLite
+schema is 4; deployment configuration remains schema 1. No settings, caches or
+history are imported. The new logical volume deliberately avoids reusing the
+previous `redapp_data`; retain that old volume as an archive. Do not copy old
+files into the new volume or point a local override at an old data directory.
+If `redapp_data_v070` already exists from another installation or an unsuccessful
+upgrade, inspect it before first use and select a different fresh volume when
+needed; changing the Compose file does not empty an existing volume. Subsequent
+starts of the same v0.7.0 instance reuse its new-format volume normally.
+
+Before upgrading the image or switching volumes, stop the existing instance and
+back up its entire current volume:
 
 ```sh
 ./upgrade --no-up redapp stop
 ```
 
-Back up using your local volume backup procedure while stopped, then run
-`./upgrade redapp`. Restore the whole directory only while stopped; do not copy
+Back up using your local volume backup procedure while stopped. Confirm that
+the resolved mount selects the intended fresh volume before the first v0.7.0
+start, then run `./upgrade redapp`. Restore only a matching-format backup into
+its intended volume while stopped; do not copy
 only the live SQLite file, delete `instance.lock`, or remove the volume with
 `down -v`. Schema downgrades may be rejected.
