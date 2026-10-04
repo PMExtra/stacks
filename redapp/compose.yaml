@@ -3,7 +3,7 @@ services:
     container_name: redapp
     image: ghcr.io/pmextra/redapp:${TAG:-latest}
     volumes:
-      - data_v070:/var/lib/redapp
+      - data:/var/lib/redapp
     env_file:
       - path: ./.env
         required: false
@@ -13,7 +13,7 @@ services:
     restart: unless-stopped
 
 volumes:
-  data_v070:
+  data:
 
 networks:
   default:
