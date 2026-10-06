@@ -1,0 +1,27 @@
+services:
+  n8n:
+    environment:
+      N8N_RUNNERS_MODE: external
+      N8N_RUNNERS_BROKER_LISTEN_ADDRESS: 0.0.0.0
+      N8N_RUNNERS_AUTH_TOKEN: ${N8N_RUNNERS_AUTH_TOKEN:?Set N8N_RUNNERS_AUTH_TOKEN}
+
+  runners:
+    container_name: n8n_runners
+    image: n8nio/runners:${TAG:-latest}
+    environment:
+      N8N_RUNNERS_TASK_BROKER_URI: http://n8n:5679
+      N8N_RUNNERS_AUTH_TOKEN: ${N8N_RUNNERS_AUTH_TOKEN:?Set N8N_RUNNERS_AUTH_TOKEN}
+      TZ: ${TZ:-Etc/UTC}
+      GENERIC_TIMEZONE: ${GENERIC_TIMEZONE:-${TZ:-Etc/UTC}}
+    hostname: runners
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      n8n:
+        condition: service_healthy

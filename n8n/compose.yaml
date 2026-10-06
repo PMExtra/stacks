@@ -1,0 +1,28 @@
+services:
+  n8n:
+    container_name: n8n
+    image: n8nio/n8n:${TAG:-latest}
+    volumes:
+      - data:/home/node/.n8n
+    env_file:
+      - path: ./.env
+        required: false
+    environment:
+      TZ: ${TZ:-Etc/UTC}
+      GENERIC_TIMEZONE: ${GENERIC_TIMEZONE:-${TZ:-Etc/UTC}}
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"
+    hostname: n8n
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, wget, -q, -O, /dev/null, "http://127.0.0.1:5678/healthz/readiness"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  data:
+
+networks:
+  default:
+    name: n8n
