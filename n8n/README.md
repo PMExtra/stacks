@@ -74,17 +74,24 @@ No Redis, queue workers, AI sandbox or Docker socket mount is added.
 
 ### Existing PostgreSQL stack
 
-`compose.postgres.yaml` connects only n8n to the existing external `postgres`
-network, following the repository's cross-stack network convention. The
-independent `postgres/compose.yaml` supplies that network and the `postgres`
-service name. This extension does not create or manage a database container,
-volume, database or role, and has no cross-stack `depends_on`.
+`compose.postgres.yaml` configures only the database connection. It does not
+create or manage networks, a database container, volume, database or role, and
+has no cross-stack `depends_on`.
+
+Have PostgreSQL join each business stack's network instead of connecting those
+stacks to a shared PostgreSQL network, which would make them mutually reachable.
+For n8n, configure PostgreSQL to join the `n8n` network using your local
+`postgres/compose.override.yaml`. That override is operator-managed and is not
+provided here. `DB_POSTGRESDB_HOST` defaults to `postgres` and can be overridden
+in `n8n/.env`. Ensure it resolves to PostgreSQL on the `n8n` network.
 
 Before enabling it, have the independent PostgreSQL stack running with an
-existing database and suitable application role. Set `DB_POSTGRESDB_DATABASE`,
-`DB_POSTGRESDB_USER` and `DB_POSTGRESDB_PASSWORD` in `n8n/.env`; all three must be
-nonempty. PostgreSQL version and storage configuration belong to that stack,
-not n8n. The connection uses the normal internal PostgreSQL port 5432 unless
+existing database and suitable application role. `DB_POSTGRESDB_DATABASE` and
+`DB_POSTGRESDB_USER` both default to `n8n` and can be overridden in `n8n/.env`.
+Set a nonempty `DB_POSTGRESDB_PASSWORD` there; no password default is provided.
+These defaults do not create the database or role. PostgreSQL version and
+storage configuration belong to that stack, not n8n. The connection uses the
+normal internal PostgreSQL port 5432 unless
 `DB_POSTGRESDB_PORT` is set in `n8n/.env`.
 
 For a database elsewhere, omit this extension and configure `DB_TYPE=postgresdb`
@@ -95,8 +102,8 @@ sustained production workloads.
 
 ## Validation boundary
 
-Compose parsing does not establish that an external network/database exists,
-check credentials, test volume permissions, or verify runner registration and
+Compose parsing does not verify PostgreSQL network attachment or DNS resolution,
+database existence, credentials, volume permissions, runner registration or
 workflow execution. Check those before production use.
 
 ## References

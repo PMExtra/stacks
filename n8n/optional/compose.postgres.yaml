@@ -2,14 +2,7 @@ services:
   n8n:
     environment:
       DB_TYPE: postgresdb
-      DB_POSTGRESDB_HOST: postgres
-      DB_POSTGRESDB_DATABASE: ${DB_POSTGRESDB_DATABASE:?Set DB_POSTGRESDB_DATABASE to an existing database}
-      DB_POSTGRESDB_USER: ${DB_POSTGRESDB_USER:?Set DB_POSTGRESDB_USER to an existing role}
+      DB_POSTGRESDB_HOST: ${DB_POSTGRESDB_HOST:-postgres}
+      DB_POSTGRESDB_DATABASE: ${DB_POSTGRESDB_DATABASE:-n8n}
+      DB_POSTGRESDB_USER: ${DB_POSTGRESDB_USER:-n8n}
       DB_POSTGRESDB_PASSWORD: ${DB_POSTGRESDB_PASSWORD:?Set DB_POSTGRESDB_PASSWORD}
-    networks:
-      - default
-      - postgres
-
-networks:
-  postgres:
-    external: true
