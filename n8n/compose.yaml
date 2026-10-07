@@ -8,6 +8,10 @@ services:
       - path: ./.env
         required: false
     environment:
+      N8N_PROTOCOL: ${N8N_PROTOCOL:-https}
+      N8N_HOST: ${N8N_HOST:?N8N_HOST is required}
+      N8N_WEBHOOK_URL: ${N8N_WEBHOOK_URL:-${N8N_PROTOCOL:-https}://${N8N_HOST:?N8N_HOST is required}/}
+      N8N_EDITOR_BASE_URL: ${N8N_EDITOR_BASE_URL:-${N8N_PROTOCOL:-https}://${N8N_HOST:?N8N_HOST is required}}
       TZ: ${TZ:-Etc/UTC}
       GENERIC_TIMEZONE: ${GENERIC_TIMEZONE:-${TZ:-Etc/UTC}}
       N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"

@@ -38,13 +38,17 @@ any required variables; the commands above are independent choices.
 
 ### Existing HTTPS reverse proxy
 
-Configure these in `n8n/.env`, replacing the example hostname:
+Set the required `N8N_HOST` in `n8n/.env` to a hostname without a protocol or
+path. `N8N_PROTOCOL` defaults to `https`; `N8N_WEBHOOK_URL` defaults to
+`${N8N_PROTOCOL}://${N8N_HOST}/` and `N8N_EDITOR_BASE_URL` to
+`${N8N_PROTOCOL}://${N8N_HOST}`. These are external URLs without the internal
+port 5678. Override either URL independently for a different public hostname,
+port or path. The existing internal HTTP health check remains unchanged.
+
+For a single trusted HTTPS proxy, use:
 
 ```dotenv
 N8N_HOST=n8n.example.com
-N8N_PROTOCOL=https
-N8N_WEBHOOK_URL=https://n8n.example.com/
-N8N_EDITOR_BASE_URL=https://n8n.example.com/
 N8N_PROXY_HOPS=1
 ```
 
