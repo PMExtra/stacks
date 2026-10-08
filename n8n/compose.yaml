@@ -8,6 +8,7 @@ services:
       - path: ./.env
         required: false
     environment:
+      N8N_PROXY_HOPS: ${N8N_PROXY_HOPS:-1}
       N8N_PROTOCOL: ${N8N_PROTOCOL:-https}
       N8N_HOST: ${N8N_HOST:?N8N_HOST is required}
       N8N_WEBHOOK_URL: ${N8N_WEBHOOK_URL:-${N8N_PROTOCOL:-https}://${N8N_HOST:?N8N_HOST is required}/}
