@@ -12,16 +12,19 @@ key unchanged after storing provider credentials in the database. Both values ar
 required by this stack, including configuration-file deployments.
 
 The image is `docker.litellm.ai/berriai/litellm:${TAG:-latest}`. Set `TAG` to select
-another published tag. The default published port is `4000`; `LITELLM_PORT` changes
-the host port and `LITELLM_BIND` can supply an address followed by `:`. Neither
-variable changes the container's port or health check.
+another published tag. LiteLLM listens on port `4000` inside its container; this
+stack publishes no host port. Use an existing reverse-proxy container for TLS
+termination. The proxy and LiteLLM must share a Docker network configured by the
+operator, with the proxy forwarding to `http://litellm:4000`. This stack does not
+create or hard-code an external network. Access the API through the proxy's HTTPS
+endpoint; the health check continues to use container-local port `4000`.
 
 Choose one model configuration mode:
 
 - **Database / Admin UI:** set `DATABASE_URL` for an existing PostgreSQL database,
   or enable the PostgreSQL component below. Set `STORE_MODEL_IN_DB=True` in `.env`
-  to manage models through the UI. The UI is at `/ui`; its default username is
-  `admin` and its initial password is the master key. Provider credentials can be
+  to manage models through the UI. The UI is at `/ui` on the proxy's HTTPS endpoint;
+  its default username is `admin` and its initial password is the master key. Provider credentials can be
   added through the management API or UI; operating this repository does not require a GUI.
 - **Configuration file:** enable the config component and provide a real model
   configuration. For operation without a database, omit `DATABASE_URL` and
@@ -214,8 +217,9 @@ Reviewed upstream commit: `b6f91a221b6b9df6f8a89ec6f8264ac87d63ff5d`.
 - [Coordination initialization and environment fallback](https://github.com/BerriAI/litellm/blob/b6f91a221b6b9df6f8a89ec6f8264ac87d63ff5d/litellm/proxy/proxy_server.py#L6109)
 - [Compose interpolation and dotenv syntax](https://docs.docker.com/compose/how-tos/environment-variables/variable-interpolation/)
 
-Compared with upstream, local source builds and Prometheus are omitted. PostgreSQL
-and config-file wiring are optional; database model storage is selected through `.env`.
+Compared with upstream, local source builds, Prometheus, and the LiteLLM host port
+mapping are omitted. PostgreSQL and config-file wiring are optional; database model
+storage is selected through `.env`.
 The root example's fixed container/volume names and database host port are unnecessary
 here. Redis uses the repository's `sub2api` image choice without copying its persistence
 tuning. No proxy, custom network, resource limit, migration job, or hardening layer is added.

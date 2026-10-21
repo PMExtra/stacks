@@ -1,8 +1,6 @@
 services:
   litellm:
     image: docker.litellm.ai/berriai/litellm:${TAG:-latest}
-    ports:
-      - "${LITELLM_BIND:-}${LITELLM_PORT:-4000}:4000"
     env_file:
       - .env
     environment:
