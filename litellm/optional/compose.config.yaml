@@ -1,0 +1,10 @@
+services:
+  litellm:
+    volumes:
+      - type: bind
+        source: ./mount/config.yaml
+        target: /app/config.yaml
+        bind:
+          create_host_path: false
+    command:
+      - --config=/app/config.yaml
