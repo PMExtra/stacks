@@ -1,5 +1,6 @@
 services:
   postgres:
+    container_name: litellm_postgres
     image: postgres:16
     environment:
       POSTGRES_USER: litellm

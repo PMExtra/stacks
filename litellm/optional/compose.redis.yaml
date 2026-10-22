@@ -1,5 +1,6 @@
 services:
   redis:
+    container_name: litellm_redis
     image: redis:8-alpine
     command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:-}"]
     environment:

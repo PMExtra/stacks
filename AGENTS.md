@@ -2,6 +2,13 @@
 
 Apply these defaults when adding or maintaining any stack:
 
+- Set an explicit `container_name` for every stack service by default, avoiding
+  Compose-generated numeric suffixes. Follow existing naming conventions: use the
+  stack name for its main service and `<stack>_<service>` for supporting services
+  to avoid collisions between stacks. Define the name once where the service is
+  introduced, not again in configuration overlays. Omit `container_name` for
+  services explicitly designed to support replicas: fixed container names prevent
+  Compose from scaling a service to multiple containers.
 - Use `${TAG:-latest}` for the image tag so operators can override it.
 - Configure environment variables only when required for deployment or when
   intentionally changing application defaults; do not repeat defaults unnecessarily.

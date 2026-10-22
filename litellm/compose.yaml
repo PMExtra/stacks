@@ -1,5 +1,6 @@
 services:
   litellm:
+    container_name: litellm
     image: docker.litellm.ai/berriai/litellm:${TAG:-latest}
     env_file:
       - .env

@@ -3,6 +3,10 @@
 This stack follows the official single-service LiteLLM gateway examples. PostgreSQL,
 Redis, and a local configuration file are independently selectable Compose components.
 Run commands from the repository root through `./upgrade`; no component is enabled by default.
+Container names are `litellm`, `litellm_postgres`, and `litellm_redis`, following the
+repository convention. These fixed names do not support replica scaling or multiple
+instances of this stack on the same Docker daemon. Compose service names remain
+`litellm`, `postgres`, and `redis` for network connections.
 
 ## Environment and models
 
@@ -220,6 +224,6 @@ Reviewed upstream commit: `b6f91a221b6b9df6f8a89ec6f8264ac87d63ff5d`.
 Compared with upstream, local source builds, Prometheus, and the LiteLLM host port
 mapping are omitted. PostgreSQL and config-file wiring are optional; database model
 storage is selected through `.env`.
-The root example's fixed container/volume names and database host port are unnecessary
-here. Redis uses the repository's `sub2api` image choice without copying its persistence
-tuning. No proxy, custom network, resource limit, migration job, or hardening layer is added.
+The root example's container names are replaced with repository-standard names;
+its fixed volume name and database host port are omitted. Redis uses the repository's
+`sub2api` image choice without copying its persistence tuning. No proxy, custom network, resource limit, migration job, or hardening layer is added.
