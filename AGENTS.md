@@ -9,6 +9,10 @@ Apply these defaults when adding or maintaining any stack:
   introduced, not again in configuration overlays. Omit `container_name` for
   services explicitly designed to support replicas: fixed container names prevent
   Compose from scaling a service to multiple containers.
+- Name the default Compose network after the stack directory using top-level
+  `networks.default.name`, without the generated `_default` suffix. Keep it a
+  Compose-managed default network, not `external`; services, including optional
+  dependencies, should join it implicitly unless the stack requires otherwise.
 - Use `${TAG:-latest}` for the image tag so operators can override it.
 - Configure environment variables only when required for deployment or when
   intentionally changing application defaults; do not repeat defaults unnecessarily.

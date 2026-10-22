@@ -18,10 +18,19 @@ required by this stack, including configuration-file deployments.
 The image is `docker.litellm.ai/berriai/litellm:${TAG:-latest}`. Set `TAG` to select
 another published tag. LiteLLM listens on port `4000` inside its container; this
 stack publishes no host port. Use an existing reverse-proxy container for TLS
-termination. The proxy and LiteLLM must share a Docker network configured by the
-operator, with the proxy forwarding to `http://litellm:4000`. This stack does not
-create or hard-code an external network. Access the API through the proxy's HTTPS
-endpoint; the health check continues to use container-local port `4000`.
+termination. Compose manages the default network named `litellm`; the application
+and optional dependencies join it automatically. Connect the existing reverse-proxy
+container to this network through its deployment configuration and forward to
+`http://litellm:4000`. The network is not declared external by this stack. Access
+the API through the proxy's HTTPS endpoint; the health check continues to use
+container-local port `4000`.
+
+For an existing deployment using the previous `<project>_default` network, applying
+this change requires recreating the stack containers on `litellm` and connecting
+the reverse proxy to the new network. Schedule that deployment separately; updating
+the repository alone does not move running containers. Do not remove the old network
+until no containers need it. This naming change applies to this stack only; other
+historical stacks are not migrated by this change.
 
 Choose one model configuration mode:
 
@@ -226,4 +235,6 @@ mapping are omitted. PostgreSQL and config-file wiring are optional; database mo
 storage is selected through `.env`.
 The root example's container names are replaced with repository-standard names;
 its fixed volume name and database host port are omitted. Redis uses the repository's
-`sub2api` image choice without copying its persistence tuning. No proxy, custom network, resource limit, migration job, or hardening layer is added.
+`sub2api` image choice without copying its persistence tuning. Only the default
+network name is customized; no extra network, proxy, resource limit, migration job,
+or hardening layer is added.
