@@ -1,7 +1,7 @@
 services:
   xray:
     volumes:
-      - geodata:/usr/share/xray
+      - geodata:/usr/local/share/xray:ro
 
 volumes:
   geodata:
