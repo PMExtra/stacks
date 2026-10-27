@@ -16,11 +16,12 @@ services:
     hostname: redis
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
+      test: ["CMD", "redis-cli", "-e", "ping"]
+      interval: 30s
       timeout: 5s
       retries: 5
-      start_period: 5s
+      start_period: 30s
+      start_interval: 5s
 
   sub2api:
     environment:
