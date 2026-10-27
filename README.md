@@ -31,3 +31,23 @@ Validation: Compose 2.40.3 rendered all optional-component combinations of these
 three stacks with empty and dummy Redis passwords (40 cases), using
 `./upgrade -n STACK config`. No images were pulled or services started; runtime
 health transitions and authentication failures were not tested.
+
+PostgreSQL services (`postgres`, and the optional components in `atlassian`,
+`litellm` and `sub2api`) use the same healthcheck timing and Engine/Compose
+requirements above. `pg_isready -h 127.0.0.1` checks TCP so the official image's
+temporary socket-only initialization server does not report ready. User and
+database names come from the container environment, defaulting to `postgres`
+and the selected user respectively; no password is included in the probe.
+Nonzero probe exits are mapped to 1 because Docker reserves exit code 2.
+
+This checks whether PostgreSQL accepts connections, not SQL execution,
+authentication, application migrations or write availability. For custom server
+configuration that excludes loopback or changes the port/TLS requirements,
+override the probe to match. The n8n PostgreSQL component only configures an
+external connection and does not add a local PostgreSQL service or probe.
+
+PostgreSQL validation with Compose 2.40.3 covered 237 valid optional-component
+and unset/empty/custom user/database combinations, including password-file
+components. Standalone PostgreSQL selected exactly one data layout; Confluence
+fonts required the Confluence component. Shell mocks checked argument quoting,
+fallbacks and exit-code mapping; no live PostgreSQL readiness tests were run.
