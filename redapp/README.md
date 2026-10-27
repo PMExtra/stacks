@@ -1,7 +1,8 @@
 # RedApp
 
-[RedApp](https://github.com/PMExtra/RedApp) redistributes Codex CLI and Claude Code
-downloads and provides an admin page. This stack tracks the latest RedApp
+[RedApp](https://github.com/PMExtra/RedApp) serves hosted files, HTTP caches and
+release downloads, including Codex CLI, Claude Code and configurable JSON releases,
+and provides an admin page. This stack tracks the latest RedApp
 and defaults to `ghcr.io/pmextra/redapp:latest`; Docker selects
 the host architecture from the image manifest. Set `TAG` in `redapp/.env`
 to pin a release if needed. Anonymous GHCR pull access has not been verified.
@@ -42,9 +43,14 @@ routing accordingly. Optional `REDAPP_MAX_WRITERS`, `REDAPP_MAX_READERS`
 and `REDAPP_MAX_ARTIFACT_BYTES` control download capacity (defaults 16, 512 and
 4GiB). The per-artifact limit accepts go-humanize size syntax or a byte count,
 from 1 byte to 1TiB; it is not a total cache quota. `4GiB` is 4294967296 bytes; `4GB` is 4000000000 bytes. Writers and readers
-remain positive integer counts. Deployment fields use CLI > env > selected file > defaults;
+remain positive integer counts. `REDAPP_MAX_DOWNLOADS_PER_CLIENT` limits concurrent
+file downloads per IPv4 address or IPv6 /64 (default 16, range 1–65536), including
+hosted/HTTP-cache requests (also `HEAD`) and release downloads. Configure trusted
+proxies correctly or all clients share the proxy's quota.
+
+Deployment fields use CLI > env > selected file > defaults;
 each source must be valid. `REDAPP_CONFIG` can select an explicitly mounted
-YAML/JSON file, but is normally omitted: the absent default
+YAML file (regardless of extension), but is normally omitted: the absent default
 `/etc/redapp/config.yaml` is allowed. An explicitly selected missing file fails
 startup. PUBLIC_URL has its separate admin precedence described above.
 
@@ -64,7 +70,7 @@ application's default behavior of trusting no forwarded headers. Never use
 incoming forwarding headers. Use HTTPS, disable proxy buffering, allow a 600s
 proxy read timeout, and restrict access through the proxy or network policy:
 downloads do not require admin login. See the upstream
-[operations guide](https://github.com/PMExtra/RedApp/blob/main/docs/operations.md)
+[operations guide](https://github.com/PMExtra/RedApp/blob/main/docs/guide/operations.md)
 for a proxy configuration example.
 
 Before deployment or upgrade, follow the data-volume requirements below.
@@ -92,11 +98,14 @@ admin override. The root filesystem is read-only, while the data
 volume stays writable; the 30s stop grace period covers RedApp's 15s shutdown
 wait.
 
-For an upgrade requiring a new data format, the operator must provide a fresh
-empty volume and retain the old data separately. No settings, caches or history
-are imported. This stack does not rename, migrate or delete existing volumes;
-confirm the resolved mount before starting. Normal restarts reuse the current
-instance's data.
+RedApp 0.10.0 supports in-place migration from schema 15 or 16 to 17,
+preserving configuration, administrator credentials, cache and hosted-file
+references, history and object files. Schemas outside this supported window
+are refused without modification; this is not a promise to migrate every
+historical version. Check the selected image's
+[operations guide](https://github.com/PMExtra/RedApp/blob/main/docs/guide/operations.md)
+before upgrading. This stack does not rename or delete volumes; confirm the
+resolved mount before starting. Normal restarts reuse the current instance's data.
 
 Before upgrading the image or switching volumes, stop the existing instance and
 back up its entire current volume:
@@ -105,8 +114,15 @@ back up its entire current volume:
 ./upgrade --no-up redapp stop
 ```
 
-Back up using your local volume backup procedure while stopped, prepare the
-required volume, then run `./upgrade redapp`. Restore only a matching-format
-backup into its intended volume while stopped; do not copy
-only the live SQLite file, delete `instance.lock`, or remove the volume with
-`down -v`. Schema downgrades may be rejected.
+Back up using your local volume backup procedure while stopped, then run
+`./upgrade redapp`. Supported migrations reuse the existing volume; a fresh empty
+volume is not required. RedApp creates a database backup before its transactional
+migration and checks for sufficient disk space (at least twice the database's
+used size). That automatic database-only backup does not replace the consistent
+whole-directory backup, which also includes object files.
+
+For rollback, stop RedApp and restore the complete pre-upgrade directory backup
+with the matching old image/binary. Do not run the old binary against the upgraded
+database or restore only the database into an object tree changed since the
+upgrade. Do not copy only the live SQLite file, delete `instance.lock`, or remove
+the volume with `down -v`. Schema downgrades are unsupported.
