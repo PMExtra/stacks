@@ -98,6 +98,36 @@ admin override. The root filesystem is read-only, while the data
 volume stays writable; the 30s stop grace period covers RedApp's 15s shutdown
 wait.
 
+The following SQLite temporary-directory behavior applies to **0.10.1**
+([implementation](https://github.com/PMExtra/RedApp/pull/20)). Verify that the
+release image is published before selecting its tag; do not assume `latest`
+already contains this fix. On startup, RedApp automatically creates and checks
+`<data_dir>/tmp/sqlite` (normally `/var/lib/redapp/tmp/sqlite`) with mode `0700`,
+after read-only version preflight and the instance lock, before opening SQLite
+or making migration backups. Existing default directories must also have mode
+`0700`; RedApp reports a mismatch instead of changing their permissions. No
+pre-created directory, extra volume or tmpfs is required for this stack. The
+scratch image, UID/GID 65532 and read-only root filesystem remain supported.
+
+Leave `SQLITE_TMPDIR` **unset** to use that default. To override it, add a nonempty
+absolute container path to `redapp/.env`; this stack's `env_file` explicitly
+passes the entry into the container. The selected directory must already exist
+on a writable mount and be writable by UID/GID 65532. If outside the data volume,
+provide the corresponding writable mount yourself. RedApp probes it by creating,
+writing and removing a file; it does not create or chmod an explicit directory,
+and an empty, relative, missing or unwritable path stops startup without fallback.
+Do not add `SQLITE_TMPDIR=` to `.env`. Exporting it only in the host shell does not
+forward it through this Compose file. Application `config validate` and
+`healthcheck` do not prepare temporary space; readiness alone does not confirm
+successful history aggregation.
+
+Temporary files use disk space on the data filesystem by default. Monitor its
+free capacity alongside database, cache and migration-backup usage. SQLite
+normally unlinks temporary files on Linux while they are open, so directory-size
+metrics can miss their space usage. They need no backup or scheduled cleanup;
+never remove SQLite WAL/SHM files as temporary-file cleanup. The 0.10.1 fix adds
+no schema migration; the schema 15/16 to 17 upgrade window below is unchanged.
+
 RedApp 0.10.0 supports in-place migration from schema 15 or 16 to 17,
 preserving configuration, administrator credentials, cache and hosted-file
 references, history and object files. Schemas outside this supported window
