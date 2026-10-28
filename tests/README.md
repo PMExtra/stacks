@@ -38,3 +38,11 @@ Other stacks and hooks are not covered by this suite. Routine interpolation
 changes can be checked with temporary `config` runs; the RedApp PUBLIC_URL change
 used those checks and added no persistent test. Add maintained tests for project
 behavior or safety boundaries, rather than Compose or shell semantics alone.
+
+The GitHub runner tests copy its stack into an isolated temporary directory and
+render it through `./upgrade -n github config`. They verify optional symlink
+discovery, the network-only base's empty service set, required names,
+repo/org settings with missing/empty/dummy registration tokens, image/proxy
+propagation, separate persistent volumes and the absence of Docker access,
+ports, forced architecture and custom startup. They do not test live GitHub
+registration, image startup or recovery of an actual runner identity.

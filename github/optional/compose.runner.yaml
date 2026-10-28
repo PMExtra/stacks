@@ -1,0 +1,20 @@
+services:
+  runner:
+    container_name: github_runner
+    image: myoung34/github-runner:${TAG:-latest}
+    env_file: .env
+    environment:
+      RUNNER_NAME: ${RUNNER_NAME:?Set a unique RUNNER_NAME in github/.env}
+      CONFIGURED_ACTIONS_RUNNER_FILES_DIR: /runner-config
+      RUNNER_WORKDIR: /runner-work
+      DISABLE_AUTOMATIC_DEREGISTRATION: "true"
+      RUN_AS_ROOT: "false"
+      UNSET_CONFIG_VARS: "true"
+    volumes:
+      - runner_config:/runner-config
+      - runner_work:/runner-work
+    restart: unless-stopped
+
+volumes:
+  runner_config:
+  runner_work:
