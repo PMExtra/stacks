@@ -1,0 +1,30 @@
+services:
+  xboard:
+    container_name: xboard
+    image: ghcr.io/cedar2025/xboard:${TAG:-latest}
+    restart: unless-stopped
+    environment:
+      RESOURCE_PROFILE: ${RESOURCE_PROFILE:-balanced}
+      ENABLE_REDIS: ${ENABLE_REDIS:-true}
+    volumes:
+      - type: bind
+        source: ./mount/app.env
+        target: /www/.env
+        bind:
+          create_host_path: false
+      - data:/www/.docker/.data
+      - logs:/www/storage/logs
+      - theme:/www/storage/theme
+      - plugins:/www/plugins
+      - redis:/data
+
+volumes:
+  data:
+  logs:
+  theme:
+  plugins:
+  redis:
+
+networks:
+  default:
+    name: xboard

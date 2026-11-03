@@ -11,6 +11,9 @@ Use the `upgrade` script as the only supported entry point for operating stacks:
 Run it from the repository root, replacing `STACK` with the stack directory.
 See `./upgrade --help` for options and custom commands.
 
+[XBoard](xboard/README.md) documents initialization, Redis requirements, native
+theme management and reverse-proxy setup.
+
 Redis services (`redis`, and the optional Redis components in `sub2api` and
 `litellm`) require Docker Engine 25.0+ and Docker Compose 2.20.2+ for
 `healthcheck.start_interval`, and Redis 6.2+ for `redis-cli -e` (including when
