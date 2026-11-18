@@ -1,0 +1,19 @@
+services:
+  cpa:
+    container_name: cpa
+    image: eceasy/cli-proxy-api:${TAG:-latest}
+    restart: unless-stopped
+    command: ["./CLIProxyAPI", "-config", "/CLIProxyAPI/config/config.yaml"]
+    volumes:
+      - config:/CLIProxyAPI/config
+      - auth:/root/.cli-proxy-api
+      - logs:/CLIProxyAPI/logs
+
+volumes:
+  config:
+  auth:
+  logs:
+
+networks:
+  default:
+    name: cpa

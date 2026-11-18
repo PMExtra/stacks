@@ -1,0 +1,4 @@
+services:
+  cpa:
+    ports:
+      - "127.0.0.1:${OAUTH_CALLBACK_PORT:-1455}:${OAUTH_CALLBACK_PORT:-1455}"

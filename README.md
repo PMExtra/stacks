@@ -11,6 +11,9 @@ Use the `upgrade` script as the only supported entry point for operating stacks:
 Run it from the repository root, replacing `STACK` with the stack directory.
 See `./upgrade --help` for options and custom commands.
 
+[CLIProxyAPI (CPA)](cpa/README.md) documents API/management authentication,
+OAuth credentials, optional callback forwarding and reverse-proxy setup.
+
 [XBoard](xboard/README.md) documents initialization, Redis requirements, native
 theme management and reverse-proxy setup.
 

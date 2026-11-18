@@ -1,0 +1,18 @@
+# CLIProxyAPI v8 configuration. Replace the example client key before starting.
+config-version: 8
+
+server:
+  port: 8317
+
+management:
+  # Required for management requests arriving through another container.
+  allow-remote: true
+  # Empty disables the Management API. Set a separate strong key to enable it.
+  secret-key: ""
+
+access:
+  api-keys:
+    - your-api-key-1
+
+oauth:
+  auth-dir: /root/.cli-proxy-api
