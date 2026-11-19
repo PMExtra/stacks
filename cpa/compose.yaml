@@ -3,14 +3,16 @@ services:
     container_name: cpa
     image: eceasy/cli-proxy-api:${TAG:-latest}
     restart: unless-stopped
-    command: ["./CLIProxyAPI", "-config", "/CLIProxyAPI/config/config.yaml"]
     volumes:
-      - config:/CLIProxyAPI/config
+      - type: bind
+        source: ./mount/config.yaml
+        target: /CLIProxyAPI/config.yaml
+        bind:
+          create_host_path: false
       - auth:/root/.cli-proxy-api
       - logs:/CLIProxyAPI/logs
 
 volumes:
-  config:
   auth:
   logs:
 

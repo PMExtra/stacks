@@ -15,8 +15,9 @@ cp -n cpa/config.example.yaml cpa/mount/config.yaml
 chmod 600 cpa/mount/config.yaml
 ```
 
-Edit the staging file `cpa/mount/config.yaml` before importing it into the named
-volume. It is not bind-mounted or read directly by the service:
+Edit `cpa/mount/config.yaml` before starting CPA. This host file is mounted
+writable at the upstream default `/CLIProxyAPI/config.yaml`; the image's default
+command reads it directly:
 
 - Replace `access.api-keys` with strong client keys. These authenticate clients
   to CPA, not CPA to an upstream provider. The shipped example is not a usable
@@ -35,26 +36,21 @@ Compose variables are not interpolated inside the mounted application YAML.
 `server.port: 8317` is explicit because the local config loader does not supply
 this port when it is absent.
 
-Initialize the named config volume once, after editing the staging file:
+After editing the file:
 
 ```sh
-./upgrade -n cpa run --rm --no-deps -T --entrypoint sh cpa -ec '
-  umask 077
-  set -C
-  cat > /CLIProxyAPI/config/config.yaml
-' < cpa/mount/config.yaml
-
+test -f cpa/mount/config.yaml && test -s cpa/mount/config.yaml
 ./upgrade -n cpa config
 ./upgrade cpa
 ./upgrade -n cpa logs --tail=100 cpa
 ```
 
-The shell's `noclobber` setting (`set -C`) refuses an existing `config.yaml`,
-including an empty file, rather than overwriting it. If initialization fails,
-inspect the volume before retrying. An uninitialized volume has no configuration;
-there is no automatic fallback template or unauthenticated bootstrap service.
-`run` creates a temporary container and may pull the image if absent; these are
-deployment instructions, not actions performed while preparing this stack.
+Do not start CPA unless the file checks succeed. The long bind syntax uses
+`create_host_path: false`: a missing source must fail instead of being created
+as a directory, as short bind syntax can do. It does not validate YAML or reject
+an already-existing directory; keep the source a regular, nonempty file.
+Compose rendering alone does not prove the host file exists or CPA can read it.
+There is no config-volume import or automatic bootstrap service.
 
 `mount/` and `.env` are ignored by the repository. Never commit real keys,
 OAuth files, private configuration or backups.
@@ -133,7 +129,7 @@ provider-supported device-code flow. For Codex:
 
 ```sh
 ./upgrade -n cpa exec cpa ./CLIProxyAPI \
-  -config /CLIProxyAPI/config/config.yaml -codex-device-login -no-browser
+  -codex-device-login -no-browser
 ```
 
 Complete authorization yourself using the URL and code printed by the command.
@@ -145,7 +141,7 @@ For browser callback flows only, enable the optional loopback port mapping:
 ln -s optional/compose.oauth.yaml cpa/compose.oauth.yaml
 ./upgrade cpa
 ./upgrade -n cpa exec cpa ./CLIProxyAPI \
-  -config /CLIProxyAPI/config/config.yaml -codex-login -no-browser
+  -codex-login -no-browser
 ```
 
 The default is port `1455` for Codex. If the browser is on another computer,
@@ -165,54 +161,53 @@ is no longer needed, then recreate the service through `./upgrade cpa`.
 
 ## Persistence and upgrades
 
-- `config`: named volume containing `config.yaml` and downloaded management
-  assets. Directory mounting
-  accommodates configuration replacement as well as in-place writes; do not
-  mount over `/CLIProxyAPI` or mark configuration read-only.
-- `auth`: OAuth credentials and the default local KV database.
-- `logs`: CPA's default log directory, including error/request files when used.
-  Ordinary application logs use stdout by default. Configure retention if
-  enabling file/request logging; logs can contain sensitive data.
+- `./mount/config.yaml`: the host configuration, mounted as one writable file at
+  `/CLIProxyAPI/config.yaml`. Panel edits update this file directly.
+- `auth`: Compose-managed volume for OAuth credentials and the default local KV
+  database.
+- `logs`: Compose-managed volume for CPA's default log directory, including
+  error/request files when used. Ordinary application logs use stdout by default.
+  Configure retention if enabling file/request logging; logs can contain secrets.
 
-All three volumes are Compose-managed and survive container recreation.
-`cpa/mount/config.yaml` is only a local staging copy; subsequent panel edits
-update the volume, not that file.
+These files and volumes survive container recreation. Downloaded management
+assets now default to `/CLIProxyAPI/static` in the container writable layer;
+they are not in the host config file and may need downloading again after
+recreation. No extra asset volume is configured.
 
-### Edit configuration
+### Management writes and host edits
 
-Prefer the protected management panel after initial setup. For an offline edit,
-stop CPA and export the current file before editing it; do not import an old
-staging copy over newer panel changes:
+The v8.0.77 backend saves ordinary settings with `os.WriteFile` and saves full
+YAML with a direct truncate/write of the existing file. These paths retain its
+inode and work with a writable single-file bind mount; they do not atomically
+rename a temporary file over the mount point. Read-only mounts or insufficient
+file permissions prevent saves. Interrupted writes are not atomic replacements.
+
+The legacy `/v0/management/config.yaml` upload first creates
+`/CLIProxyAPI/config-validate-*.yaml` beside the mounted file. The container's
+`/CLIProxyAPI` directory must also be writable for this validation, even if the
+file itself is writable. The `/v8/management/config.yaml` handler validates in
+memory and does not use this temporary file. This stack does not enable a
+read-only container filesystem or override the image user; custom restrictions
+can still prevent writes. These conclusions are from source inspection, not a
+live management API test.
+
+Prefer the protected panel for routine configuration changes. For a host edit,
+stop CPA, securely back up `cpa/mount/config.yaml`, and edit that file:
 
 ```sh
 ./upgrade -n cpa stop cpa
-umask 077
-./upgrade -n cpa run --rm --no-deps -T --entrypoint sh cpa -ec \
-  'cat /CLIProxyAPI/config/config.yaml' > cpa/mount/config.current.yaml
 ```
 
-Check the export succeeded, back it up securely, then edit
-`cpa/mount/config.current.yaml`. Apply the intentional replacement using a
-temporary file in the same volume, then restart:
+Validate the edited YAML before starting again. Editors and file-copy tools may
+replace the host file with a new inode. An existing single-file bind can remain
+attached to the old inode; a simple restart is insufficient. Recreate the
+container after a host edit or restoring a backup:
 
 ```sh
-./upgrade -n cpa run --rm --no-deps -T --entrypoint sh cpa -ec '
-  umask 077
-  test -f /CLIProxyAPI/config/config.yaml
-  tmp=$(mktemp /CLIProxyAPI/config/config.yaml.XXXXXX)
-  trap '\''rm -f "$tmp"'\'' EXIT
-  cat > "$tmp"
-  test -s "$tmp"
-  mv "$tmp" /CLIProxyAPI/config/config.yaml
-' < cpa/mount/config.current.yaml
-./upgrade cpa
+./upgrade -n cpa up -d --force-recreate cpa
 ```
 
-Do not restart if export/import failed. Import is an explicit replacement, not
-a merge; check the edited YAML before applying it. No real secrets belong in
-the repository or in shared command output.
-
-Back up the config and auth volumes securely. Stop CPA with
+Back up the host config and auth volume securely. Stop CPA with
 `./upgrade -n cpa stop cpa` before copying live auth/KV files for a consistent
 backup. Record the image version with each backup. Upgrade with `./upgrade cpa`;
 do not use `down -v` for routine upgrades. Review new configuration/storage
